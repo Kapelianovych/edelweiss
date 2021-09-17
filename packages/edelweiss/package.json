@@ -19,12 +19,12 @@
 	},
 	"scripts": {
 		"clean": "rimraf build/*",
-		"prebuild": "npm run clean; npm run test",
+		"prebuild": "npm run clean",
 		"build": "rollup -c",
 		"postbuild": "npm run copy",
 		"copy": "npm run copy:docs; npm run copy:settings; npm run copy:license",
 		"copy:docs": "cpy README.md build/",
-		"copy:license": "cpy LICENSE build/",
+		"copy:license": "cpy ../../LICENSE build/",
 		"copy:settings": "cpy package.json build/",
 		"prerelease": "npm run build",
 		"release": "npm publish build/ --access public"

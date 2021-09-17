@@ -1,1 +1,3 @@
-export * from '../../rollup.config';
+import base from '../../rollup.config';
+
+export default base;

@@ -7,6 +7,7 @@
 	"scripts": {
 		"test": "jest",
 		"clean": "lerna run clean",
+		"prebuild": "npm run test",
 		"build": "lerna run build"
 	},
 	"keywords": [

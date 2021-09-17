@@ -1,6 +1,6 @@
 {
 	"name": "@prostory/edelweiss-ssr",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"description": "Environment for server-side rendering of Edelweiss templates.",
 	"type": "module",
 	"main": "./index.js",
@@ -17,10 +17,10 @@
 		"clean": "rimraf build",
 		"prebuild": "npm run clean",
 		"build": "rollup -c",
-		"postbuild": "npm run copy; npm test",
+		"postbuild": "npm run copy",
 		"copy": "npm run copy:docs; npm run copy:settings; npm run copy:license",
-		"copy:docs": "cpy README.md build/; cpy CHANGELOG.md build/",
-		"copy:license": "cpy LICENSE build/",
+		"copy:docs": "cpy README.md build/",
+		"copy:license": "cpy ../../LICENSE build/",
 		"copy:settings": "cpy package.json build/",
 		"prerelease": "npm run build",
 		"release": "npm publish build/ --access public"
