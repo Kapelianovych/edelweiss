@@ -9,6 +9,7 @@ export default {
 		'path',
 		'chalk',
 		'commander',
+		'@fluss/core',
 		'child_process',
 	],
 };

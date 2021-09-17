@@ -1,7 +1,7 @@
-import ora from 'ora';
+import ora, { Ora } from 'ora';
 
-export const createSpinner = (text: string): ora.Ora =>
-  ora({
-    text,
-    prefixText: '',
-  }).start();
+export const createSpinner = (text: string): Ora =>
+	ora({
+		text,
+		prefixText: '',
+	}).start();

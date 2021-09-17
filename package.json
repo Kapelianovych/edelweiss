@@ -8,7 +8,10 @@
 		"test": "jest",
 		"clean": "lerna run clean",
 		"prebuild": "npm run test",
-		"build": "lerna run build"
+		"build": "lerna run build",
+		"release:edelweiss": "npm run release -w @prostory/edelweiss",
+		"release:edelweiss-cli": "npm run release -w @prostory/edelweiss-cli",
+		"release:edelweiss-ssr": "npm run release -w @prostory/edelweiss-ssr"
 	},
 	"keywords": [
 		"Edelweiss"
