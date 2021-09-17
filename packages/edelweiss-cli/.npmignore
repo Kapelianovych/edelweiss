@@ -1,0 +1,10 @@
+node_modules/
+src/
+tests/
+
+.gitignore
+.npmignore
+.prettierrc.json
+package-lock.json
+rollup.config.js
+tsconfig.json

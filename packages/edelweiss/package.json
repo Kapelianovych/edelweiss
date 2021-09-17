@@ -1,0 +1,34 @@
+{
+	"name": "@prostory/edelweiss",
+	"version": "2.0.0-alpha.9",
+	"description": "Small framework that builds HTML from JS.",
+	"keywords": [
+		"Edelweiss",
+		"UI framework"
+	],
+	"main": "./index.js",
+	"exports": {
+		".": "./index.js",
+		"./index": "./index.js",
+		"./index.js": "./index.js"
+	},
+	"type": "module",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/YevhenKap/edelweiss"
+	},
+	"scripts": {
+		"clean": "rimraf build/*",
+		"prebuild": "npm run clean; npm run test",
+		"build": "rollup -c",
+		"postbuild": "npm run copy",
+		"copy": "npm run copy:docs; npm run copy:settings; npm run copy:license",
+		"copy:docs": "cpy README.md build/",
+		"copy:license": "cpy LICENSE build/",
+		"copy:settings": "cpy package.json build/",
+		"prerelease": "npm run build",
+		"release": "npm publish build/ --access public"
+	},
+	"author": "Kapelianovych Yevhen",
+	"license": "MIT"
+}
