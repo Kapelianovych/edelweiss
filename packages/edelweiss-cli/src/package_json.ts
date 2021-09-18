@@ -50,9 +50,8 @@ const installDependencies = async (cwd: string) => {
 		...(
 			[
 				'@prostory/edelweiss',
-				{ type: 'dev', name: 'parcel' },
 				{ type: 'dev', name: 'rimraf' },
-				{ type: 'dev', name: 'prettier' },
+				{ type: 'dev', name: 'parcel' },
 			] as ReadonlyArray<string | Dependency>
 		).map((dependency, index, deps) => () => {
 			spinner.prefixText = progress(deps.length, index);

@@ -1,10 +1,10 @@
-# Prostory
+# Edelweiss
 
-This is an `Edelweiss` projects that aims to build simple but yet powerful web framework.
+This is a project that aims to build simple but yet powerful web framework.
 
 ## Documentation
 
-Documentation for each package you can find in according directories:
+Documentation for each package you can find in according directory:
 
 1. [Edelweiss](./packages/edelweiss)
 2. [Edelweiss SSR](./packages/edelweiss-ssr)
