@@ -2,7 +2,7 @@
 
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 
-Quickly bootstraps simple environment for creating SPAs with Edelweiss.
+Quickly bootstraps a simple environment for creating SPAs with Edelweiss.
 
 > Documentation for old version of CLI is [here](https://yevhenkap.github.io/docs-cli).
 

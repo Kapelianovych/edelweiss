@@ -1,6 +1,6 @@
 # Edelweiss
 
-This is a project that aims to build simple but yet powerful web framework.
+This is a project that aims to build simple but yet powerful library for building web applications.
 
 ## Documentation
 

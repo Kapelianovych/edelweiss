@@ -1,10 +1,10 @@
 # Edelweiss
 
-A small framework that builds UI.
+A small library that builds UI.
 
 ## Intention
 
-This library is not special. It has not smallest runtime size, it is not fastest one, but it aims to be as simple as possible 🙂.
+It is not special. It has not the smallest runtime size, it is not the fastest one, but it aims to be as simple as possible 🙂.
 
 ## Installation
 

@@ -2,7 +2,7 @@
 
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 
-Builds templates on server.
+Builds Edelweiss templates on a server.
 
 ## Intention
 
@@ -68,8 +68,8 @@ Also if you want to mimic browser's behavior, package exports two functions:
 
   ```ts
   interface LayoutOptions {
-    isPath?: boolean;
-    sanitize?: (html: string) => string;
+  	isPath?: boolean;
+  	sanitize?: (html: string) => string;
   }
 
   function layout(value: string, options?: LayoutOptions): void;
