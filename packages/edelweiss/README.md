@@ -552,6 +552,34 @@ When you delete a property, then listener will be invoked with `undefined` value
 delete cache.url;
 ```
 
+For convenience, there is a `createPointer` function that creates `Pointer` instance. It allows to get exact value from the store no matter how deep it is.
+
+You can create many pointers for one store, but usually it isn't necessary to do so.
+
+```ts
+const appStore = store({ keyFromStore: { inner: '' } });
+
+const appStorePointer = createPointer(appStore);
+```
+
+With pointer you can create reactive container that is depend on a value from the store.
+
+```ts
+const value: Data<string> = appStorePointer('keyFromStore');
+```
+
+By default, you can get and update the value of `keyFromStore` property in the store. But you can customize what it should return and update by providing `getter` and `setter` arguments.
+
+```ts
+const value: Data<string> = appStorePointer(
+	'keyFromStore',
+	({ inner }) => inner,
+	// You should return new state in setter to trigger update
+	// in places where reactive container is used.
+	(currentState, newValue) => ({ ...currentState, inner: newValue }),
+);
+```
+
 ### Internationalization
 
 For supporting different languages on site, Edelweiss suggests `i18n` module.

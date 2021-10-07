@@ -1,5 +1,6 @@
 import { ToTuple } from './core/utilities/to_tuple';
 import { ToValues } from './core/utilities/to_values';
+import { data, Data } from './core/reactive/data';
 
 /**
  * Function that does some action with
@@ -38,7 +39,7 @@ const getSubscribeFunction =
 				),
 		});
 
-		return () => void (listeners[index - 1] = undefined);
+		return () => (listeners[index - 1] = undefined);
 	};
 
 const triggerUpdate = (
@@ -76,3 +77,34 @@ export const store = <S extends object>(object: S): Store<S> => {
 		},
 	});
 };
+
+/** Reactive pointer to specific fiels in store. */
+export interface Pointer<S extends object> {
+	<K extends keyof S>(key: K): Data<S[K]>;
+	<K extends keyof S, A>(
+		key: K,
+		getter: (state: S[K]) => A,
+		setter: (current: S[K], value: A) => S[K],
+	): Data<A>;
+}
+
+/** Creates reactive pointer(getter/setter) of a value from a store. */
+export const createPointer =
+	<T extends object>(store: Store<T>): Pointer<T> =>
+	<K extends keyof T, A>(
+		key: K,
+		getter: (state: T[K]) => A | T[K] = (x) => x,
+		setter: (state: T[K], value: A) => A | T[K] = (_, x) => x,
+	): Data<A> => {
+		const state = data(getter(store[key]));
+
+		store.on(key)((value) => state(getter(value)));
+
+		return ((value) =>
+			value === undefined
+				? state()
+				: void (store[key] = setter(
+						store[key],
+						value,
+				  ) as Store<T>[K])) as Data<A>;
+	};

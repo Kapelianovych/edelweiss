@@ -1,5 +1,5 @@
 import './crypto_for_jest';
-import { store } from '../src';
+import { store, createPointer, effect } from '../src';
 
 describe('store', () => {
 	test('on method should return function', () => {
@@ -72,5 +72,63 @@ describe('store', () => {
 		testStore.h = 1;
 
 		expect(count).toBe(2);
+	});
+});
+
+describe('createPointer', () => {
+	it('should return function', () => {
+		const testStore = store({ h: 0 });
+
+		const hPointer = createPointer(testStore);
+
+		expect(typeof hPointer).toBe('function');
+	});
+
+	it('should create getter/setter of value in the store by default', () => {
+		const testStore = store({ value: 0 });
+
+		const pointer = createPointer(testStore);
+		const state = pointer('value');
+
+		expect(state()).toBe(0);
+
+		state(1);
+
+		expect(testStore.value).toBe(1);
+	});
+
+	it('should be able to accept custom getter and setter functions', () => {
+		const testStore = store({ value: { a: 0 } });
+
+		const pointer = createPointer(testStore);
+		const state = pointer(
+			'value',
+			({ a }) => a,
+			(_, value) => ({ a: value }),
+		);
+
+		expect(state()).toBe(0);
+
+		state(1);
+
+		expect(testStore.value).toEqual({ a: 1 });
+	});
+
+	it('should create reactive container', () => {
+		const testStore = store({ value: { a: 0 } });
+
+		const pointer = createPointer(testStore);
+		const state = pointer(
+			'value',
+			({ a }) => a,
+			(_, value) => ({ a: value }),
+		);
+
+		let value = 0;
+		effect(() => (value = state()));
+
+		state(3);
+
+		expect(value).toBe(3);
 	});
 });
