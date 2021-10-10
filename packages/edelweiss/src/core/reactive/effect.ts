@@ -29,8 +29,8 @@ export const effect = (fn: Effect): void => {
 		});
 	}
 
-	if ((fn as InnerEffect).dataDependencies === undefined) {
-		Reflect.defineProperty(fn, 'dataDependencies', {
+	if ((fn as InnerEffect).owners === undefined) {
+		Reflect.defineProperty(fn, 'owners', {
 			value: [],
 			writable: false,
 			enumerable: false,

@@ -8,8 +8,8 @@ export interface Computed<T> {
 }
 
 export interface InnerEffect extends Effect {
+	readonly owners: symbol[];
 	readonly children: InnerEffect[];
-	readonly dataDependencies: symbol[];
 	cleanup?: VoidFunction;
 	disposed: boolean;
 }

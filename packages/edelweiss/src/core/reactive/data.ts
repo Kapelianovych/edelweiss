@@ -7,30 +7,31 @@ export interface Data<T> {
 	(value: T): void;
 }
 
-const update = (dataId: symbol, listeners: InnerEffect[]): void =>
-	listeners
+const update = (dataId: symbol, listeners: Set<InnerEffect>): void =>
+	Array.from(listeners)
 		.filter(
 			(effect) =>
 				// Only known effects and those that don't need to be
 				// disposed should be invoked.
 				// It is needed in situations when data is used
 				// only in effect that is disposed. In that case
-				// getter never invokes and cannot dispose effect.
-				effect.dataDependencies.includes(dataId) && !effect.disposed,
+				// getter never invokes and cannot dispose the effect.
+				effect.owners.includes(dataId) && !effect.disposed,
 		)
 		.forEach((effect) => {
-			// All child effects should be deleted on every iteration. Parent effect will register new ones after it.
+			// All child effects should be deleted on every iteration.
+			// The parent effect will register new ones after it.
 			effect.children.forEach((child) => {
 				child.cleanup?.();
 				child.disposed = true;
 			});
 			effect.children.length = 0;
 			// Before executing an effect we should clear
-			// all data dependencies of the effect.
-			// Because of this we can count all data dependencies
+			// all data owners of the effect.
+			// Because of this we can count all data ownersd
 			// that are invoked inside (dependency is registered
 			// in data getter).
-			effect.dataDependencies.length = 0;
+			effect.owners.length = 0;
 			// We should cleanup previous state of running effect.
 			effect.cleanup?.();
 
@@ -42,7 +43,7 @@ const update = (dataId: symbol, listeners: InnerEffect[]): void =>
 /** Creates reactive container for data. */
 export const data = <T>(initial: T): Data<T> => {
 	const id = Symbol();
-	let listeners: InnerEffect[] = [];
+	const listeners: Set<InnerEffect> = new Set();
 	let currentValue: T = initial;
 
 	const triggerUpdateWith = (nextValue: T): void => {
@@ -52,21 +53,17 @@ export const data = <T>(initial: T): Data<T> => {
 
 	return ((value) => {
 		if (value === undefined) {
-			listeners = listeners.filter(
-				(effect) =>
-					// Effects are disposed right before new subscription.
-					!effect.disposed,
-			);
+			Array.from(listeners)
+				.filter(({ disposed }) => !disposed)
+				// Effects are disposed right before new subscription.
+				.forEach((effect) => listeners.delete(effect));
 
 			if (currentlyTracked) {
 				const effect = initializedEffect() ?? runningEffect();
 
 				if (effect !== null) {
-					effect.dataDependencies.push(id);
-
-					if (!listeners.includes(effect)) {
-						listeners.push(effect);
-					}
+					effect.owners.push(id);
+					listeners.add(effect);
 				}
 			}
 
