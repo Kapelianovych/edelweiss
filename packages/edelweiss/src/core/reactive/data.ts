@@ -54,7 +54,7 @@ export const data = <T>(initial: T): Data<T> => {
 	return ((value) => {
 		if (value === undefined) {
 			Array.from(listeners)
-				.filter(({ disposed }) => !disposed)
+				.filter(({ disposed }) => disposed)
 				// Effects are disposed right before new subscription.
 				.forEach((effect) => listeners.delete(effect));
 
