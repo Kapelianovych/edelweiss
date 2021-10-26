@@ -11,42 +11,23 @@ import {
  * is used inside that effect.
  */
 export const effect = (fn: Effect): void => {
-	if ((fn as InnerEffect).children === undefined) {
-		Reflect.defineProperty(fn, 'children', {
-			value: [],
-			writable: false,
-			enumerable: false,
-			configurable: false,
-		});
-	}
+	// ETA abstraction is needed to add required fields
+	// to the effect and don't impact user-provided function.
+	const innerEffect = () => fn();
 
-	if ((fn as InnerEffect).disposed === undefined) {
-		Reflect.defineProperty(fn, 'disposed', {
-			value: false,
-			writable: true,
-			enumerable: false,
-			configurable: false,
-		});
-	}
+	innerEffect.owners = [] as symbol[];
+	innerEffect.children = [] as InnerEffect[];
+	innerEffect.disposed = false;
 
-	if ((fn as InnerEffect).owners === undefined) {
-		Reflect.defineProperty(fn, 'owners', {
-			value: [],
-			writable: false,
-			enumerable: false,
-			configurable: false,
-		});
-	}
-
-	// If there is root effect or running effect, then we
-	// should add current effect to them as a child.
-	(initializedEffect() ?? runningEffect())?.children.push(fn as InnerEffect);
+	// If there is a root effect or a running effect, then we
+	// should add the current effect to them as a child.
+	(initializedEffect() ?? runningEffect())?.children.push(innerEffect);
 
 	// Effect can be invoked inside another effect,
-	// so we should preserve parent effect.
+	// so we should preserve the parent effect.
 	const parentEffect = initializedEffect();
 
-	initializedEffect(fn as InnerEffect);
-	fn();
+	initializedEffect(innerEffect);
+	innerEffect();
 	initializedEffect(parentEffect);
 };

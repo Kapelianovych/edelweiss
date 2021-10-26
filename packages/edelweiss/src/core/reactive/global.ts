@@ -2,7 +2,7 @@ export interface Effect {
 	(): void;
 }
 
-/** Function that can have `data` variables inside. */
+/** Function that has `data` variables inside. */
 export interface Computed<T> {
 	(): T;
 }

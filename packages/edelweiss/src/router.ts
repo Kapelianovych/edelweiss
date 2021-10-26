@@ -62,12 +62,12 @@ export const router =
 	};
 
 /**
- * Navigates to _path_.
+ * Navigates to the _path_.
  * If no route is defined for _path_,
  * then route with `notFound` property will
  * be rendered. Otherwise - default _not found_ route.
  */
-export const to: (path: string) => void = current;
+export const to = (path: string) => current(path);
 
 // Handles routing that are accomplished with browser's buttons
 // or through _History API_:

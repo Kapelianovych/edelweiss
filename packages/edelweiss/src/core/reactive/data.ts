@@ -28,7 +28,7 @@ const update = (dataId: symbol, listeners: Set<InnerEffect>): void =>
 			effect.children.length = 0;
 			// Before executing an effect we should clear
 			// all data owners of the effect.
-			// Because of this we can count all data ownersd
+			// Because of this we can count all data owners
 			// that are invoked inside (dependency is registered
 			// in data getter).
 			effect.owners.length = 0;
