@@ -7,7 +7,6 @@ export { untrack } from './core/reactive/untrack';
 export { cleanup } from './core/reactive/cleanup';
 export { to, router } from './router';
 export { CustomHTMLElement } from './custom_html_element';
-export { store, createPointer } from './store';
 export { render, renderToString } from './render';
 export { language, languages, translate, translations } from './i18n';
 
@@ -19,5 +18,4 @@ export type { Fragment } from './core/template/collect';
 export type { Template } from './core/template/entity';
 export type { Computed } from './core/reactive/global';
 export type { Resource } from './lazy';
-export type { Store, Pointer } from './store';
 export type { Texts, Translation } from './i18n';
