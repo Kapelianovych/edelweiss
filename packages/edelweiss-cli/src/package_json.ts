@@ -25,10 +25,7 @@ const initPackageJson = (cwd: string) => {
 					version: '0.1.0',
 					private: true,
 					scripts: {
-						clean: 'rimraf dist',
-						prestart: 'npm run clean',
-						start: 'parcel serve ./src/index.html',
-						prebuild: 'npm run clean',
+						start: 'parcel ./src/index.html',
 						build: 'parcel build ./src/index.html',
 					},
 				},
@@ -48,11 +45,9 @@ const installDependencies = async (cwd: string) => {
 
 	return sequentially(
 		...(
-			[
-				'@prostory/edelweiss',
-				{ type: 'dev', name: 'rimraf' },
-				{ type: 'dev', name: 'parcel' },
-			] as ReadonlyArray<string | Dependency>
+			['@prostory/edelweiss', { type: 'dev', name: 'parcel' }] as ReadonlyArray<
+				string | Dependency
+			>
 		).map((dependency, index, deps) => () => {
 			spinner.prefixText = progress(deps.length, index);
 			spinner.text =

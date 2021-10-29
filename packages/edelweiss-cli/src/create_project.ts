@@ -17,7 +17,7 @@ export const createProject = async (
 	)(resolve(folder)).then(() => {
 		console.log();
 
-		if (folder !== process.cwd()) {
+		if (resolve(folder) !== process.cwd()) {
 			console.log(`Navigate to ${chalk.green(folder)}:`);
 			console.log(`  ${chalk.gray('-')} ${chalk.magenta('cd ' + folder)}`);
 			console.log();

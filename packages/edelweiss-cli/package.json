@@ -1,6 +1,6 @@
 {
 	"name": "@prostory/edelweiss-cli",
-	"version": "1.0.0-alpha.3",
+	"version": "1.0.0-alpha.4",
 	"description": "CLI for creating Edelweiss powered apps.",
 	"type": "module",
 	"bin": {
