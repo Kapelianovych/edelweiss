@@ -4,17 +4,17 @@ import { isAbsolute, resolve } from 'path';
 import './context';
 
 export interface LayoutOptions {
-  /**
-   * Tells either value passed to `layout` function is path to
-   * HTML file or not.
-   */
-  isPath?: boolean;
-  /**
-   * Sanitizes HTML before converting to DOM and attaching
-   * to current document element.
-   * By default, does not do any sanitization.
-   */
-  sanitize?: (html: string) => string;
+	/**
+	 * Tells either value passed to `layout` function is path to
+	 * HTML file or not.
+	 */
+	isPath?: boolean;
+	/**
+	 * Sanitizes HTML before converting to DOM and attaching
+	 * to current document element.
+	 * By default, does not do any sanitization.
+	 */
+	sanitize?: (html: string) => string;
 }
 
 /**
@@ -32,18 +32,16 @@ export interface LayoutOptions {
  * as absolute path or relative path from _current working directory_.
  */
 export const layout = (
-  value: string,
-  { isPath = false, sanitize = (html) => html }: LayoutOptions = {}
+	value: string,
+	{ isPath = false, sanitize = (html) => html }: LayoutOptions = {},
 ): void => {
-  if (isPath) {
-    const url = isAbsolute(value) ? value : resolve(value);
+	const html = isPath
+		? readFileSync(isAbsolute(value) ? value : resolve(value), {
+				encoding: 'utf-8',
+		  })
+		: value;
 
-    document.documentElement.innerHTML = sanitize(
-      readFileSync(url, { encoding: 'utf-8' })
-    );
-  } else {
-    document.documentElement.innerHTML = sanitize(value);
-  }
+	document.documentElement.outerHTML = sanitize(html);
 };
 
 /**
@@ -51,4 +49,4 @@ export const layout = (
  * Note that all listeners and `Dependencies` will not be available
  * if you create new DOM tree from string.
  */
-export const page = () => document.documentElement.outerHTML;
+export const page = () => document.documentElement.innerHTML;

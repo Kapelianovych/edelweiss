@@ -37,16 +37,16 @@ The main goal of this package is to setup DOM environment on server. So, mostly 
 import '@prostory/edelweiss-ssr';
 ```
 
-Along with `renderToString` function from `@prostory/edelweiss`, you can create static HTML.
+With `renderToString` function from `@prostory/edelweiss`, you can create static HTML.
 
 ```ts
 import '@prostory/edelweiss-ssr';
 import { html, renderToString } from '@prostory/edelweiss';
 
-// Unfortunately, html function cannot create <html> element, so
-// top-level layout should be organized as raw string;
+// You should always include DOCTYPE declaration.
 const htmlLayout = (content: string): string => `
-  <html>
+	<!DOCTYPE html>
+  <html lang="en">
     <head>
       <title>Title</title>
     </head>
@@ -62,7 +62,7 @@ const page = htmlLayout(renderToString(template));
 // And you can send page to client or write to disk, or do with this variable what you want.
 ```
 
-Also if you want to mimic browser's behavior, package exports two functions:
+Also if you want to mimic browser's behavior, the package exports two functions:
 
 - `layout` - used to create basic DOM structure in global `document` object.
 
@@ -77,16 +77,17 @@ Also if you want to mimic browser's behavior, package exports two functions:
 
   This function can accept HTML layout as `string`(like _htmlLayout_ function defined above) or path to `.html` file, that contains basic page structure.
 
-  By default, _value_ means to be HTML string. If you want pass a path to the file, then you should provide a second parameter with _isPath_ property to be `true`.
+  By default, _value_ means to be HTML string. If you want to pass a path to the file, then you should provide a second parameter with _isPath_ property as `true`.
 
-  > Node, that HTML passed to `layout` are not sanitized by default. If you do not trust source of _value_, then you can sanitize it by providing _sanitize_ property function in second parameter.
+  > Note, that HTML passed to `layout` are not sanitized by default. If you do not trust source of _value_, then you can sanitize it by providing _sanitize_ property function as second parameter.
 
   ```ts
   import { layout } from '@prostory/edelweiss-ssr';
   import { html, render } from '@prostory/edelweiss';
 
   const basicLayout = `
-    <html>
+  	<!DOCTYPE html>
+    <html lang="en">
       <head>
         <title>Title</title>
       </head>
@@ -103,7 +104,7 @@ Also if you want to mimic browser's behavior, package exports two functions:
   render(document.body, template);
   ```
 
-- `page` - returns the whole current DOM as string. So given above example, we can get stringified page's HTML as:
+- `page` - returns the whole current DOM as a string. So given above example, we can get stringified page's HTML as:
 
   ```ts
   import { page, layout } from '@prostory/edelweiss-ssr';
@@ -112,7 +113,9 @@ Also if you want to mimic browser's behavior, package exports two functions:
 
   const stringifiedPage = page();
   // This variable will hold:
-  // `<html>
+  // `
+  //   <!DOCTYPE html>
+  //	 <html land="en">
   //   <head>
   //     <title>Title</title>
   //   </head>

@@ -1,6 +1,6 @@
 {
 	"name": "@prostory/edelweiss-ssr",
-	"version": "0.2.2",
+	"version": "0.2.3",
 	"description": "Environment for server-side rendering of Edelweiss templates.",
 	"type": "module",
 	"main": "./index.js",
