@@ -17,6 +17,8 @@ export interface LayoutOptions {
 	sanitize?: (html: string) => string;
 }
 
+const DOCTYPE = '<!DOCTYPE html>';
+
 /**
  * Defines layout for current document element.
  *
@@ -41,12 +43,30 @@ export const layout = (
 		  })
 		: value;
 
-	document.documentElement.outerHTML = sanitize(html);
+	const sanitizedHTML = sanitize(html);
+	const layoutDocument = new DOMParser().parseFromString(
+		sanitizedHTML,
+		'text/html',
+	);
+
+	document.documentElement.innerHTML = layoutDocument.documentElement.innerHTML;
+	layoutDocument.documentElement
+		.getAttributeNames()
+		.forEach((name) =>
+			document.documentElement.setAttribute(
+				name,
+				layoutDocument.documentElement.getAttribute(name) ?? '',
+			),
+		);
 };
 
 /**
- * Returns string representation of current document element.
+ * Returns a string representation of the current document element.
  * Note that all listeners and `Dependencies` will not be available
- * if you create new DOM tree from string.
+ * if you create new DOM tree from a string.
  */
-export const page = () => document.documentElement.innerHTML;
+export const page = (): string => {
+	const html = document.documentElement.outerHTML;
+
+	return html.startsWith(DOCTYPE) ? html : DOCTYPE + html;
+};
