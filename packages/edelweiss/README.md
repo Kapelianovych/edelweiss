@@ -350,14 +350,17 @@ batch(() => {
 Reactivity in the Edelweiss is implement as synchronous system. So, in asynchronous code (aka promises, timeouts) all reactivity will be lost. That problem resolves `lazy` function.
 
 ```ts
-function lazy<T>(future: () => Promise<T>, initial: T): Resource<T>;
+function lazy<T, K>(
+	future: (dependency?: K) => Promise<T>,
+	initial: T,
+): Resource<T, K>;
 ```
 
 `Resource` is a function with special properties that help you track resource state.
 
 ```ts
-interface Resource<T> {
-	(shouldUpdate?: (old: T) => boolean): T;
+interface Resource<T, K> {
+	(dependency?: K): T;
 	readonly error: () => Error;
 	readonly loading: () => boolean;
 }
@@ -378,13 +381,12 @@ const value = lazy(
 value();
 ```
 
-By default, resource is loaded only once. But you can customize this behavior by declaring `shouldUpdate` parameter. This function receives current resource value and if you decide that it should be updated then return `true`.
+If you don't provide a dependency, resource is loaded only once. Otherwise, a resource will be refetched with the new dependency.
 
 ```ts
 effect(() => {
-	const updated = value((current) => {
-		/* calculation that returns a boolean */
-	});
+	const calculatedValue = 'some value';
+	const updated = value(calculatedValue);
 
 	// ...
 });
@@ -414,7 +416,7 @@ effect(() => {
 
 ### Router
 
-For basic routing purposes library exports two functions: `router` and `to`.
+For basic routing purposes library exports two functions: `router` and `current`.
 
 ```ts
 function router(...routes: ReadonlyArray<Route>): Computed<Fragment>;
@@ -463,19 +465,23 @@ For defining variable parts in URL just embrace them with parenthesis and this v
 
 > If there aren't any route that matches the current URL, then the last route will be rendered.
 
-For navigating between pages use `to` function:
-
-```ts
-function to(path: string): void;
-```
+For navigating between pages use `current` function which is the reactive container `Data<string>`:
 
 It accepts an URL of page against which _pattern_ is matched.
 
 ```ts
-to('/post/12');
+current('/post/12');
 ```
 
-Also there is a `<route-link>` custom element that does navigation as `to` function, but in declarative way. It needs only `href` attribute.
+That triggers navigating to the `/post/12` page.
+
+To get current path you can invoke the `current` function without an argument.
+
+```ts
+const currentPath = current();
+```
+
+Also there is a `<route-link>` custom element that does navigation as `current` function, but in declarative way. It needs only `href` attribute.
 
 ```ts
 // Click on `<route-link>` element will render page that matches "^/$" _pattern_.

@@ -1,5 +1,5 @@
 import './crypto_for_jest';
-import { html, router, to } from '../src';
+import { html, router, current } from '../src';
 
 describe('router', () => {
 	beforeAll(() => (window.location.pathname = '/'));
@@ -44,7 +44,7 @@ describe('router', () => {
 			'start',
 		);
 
-		to('/one');
+		current('/one');
 
 		expect(template.clone().build().childNodes.length).toBe(
 			3 /* start comment + text + end comment */,
@@ -68,7 +68,7 @@ describe('router', () => {
 
 		const template = html` <div>${page}</div> `;
 
-		to('/second');
+		current('/second');
 
 		expect(template.clone().build().firstElementChild?.innerHTML).toMatch(
 			/one/,
@@ -99,19 +99,19 @@ describe('router', () => {
 
 		const buildedTemplate = template.clone().build();
 
-		to('/');
+		current('/');
 
 		expect(buildedTemplate.textContent).toContain('start');
 
-		to('/one');
+		current('/one');
 
 		expect(buildedTemplate.textContent).toContain('one');
 
-		to('/');
+		current('/');
 
 		expect(buildedTemplate.textContent).toContain('start');
 
-		to('/one');
+		current('/one');
 
 		expect(buildedTemplate.textContent).toContain('one');
 	});
@@ -124,7 +124,7 @@ describe('router', () => {
 
 		const template = html`<div>${page}</div>`;
 
-		to('/');
+		current('/');
 
 		const buildedTemplate = template.clone().build();
 

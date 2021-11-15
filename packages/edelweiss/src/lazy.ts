@@ -1,13 +1,15 @@
 import { data } from './core/reactive/data';
 
-export interface Resource<T> {
+export interface Resource<T, K> {
 	/**
-	 * Gets current resource value. By default,
-	 * resource is loaded only once, but you can
-	 * change it by providing optional `shouldUpdate`
-	 * function that receives current resource's value.
+	 * Gets current resource value.
+	 * You can provide _dependency_ to the _future_
+	 * function.
+	 *
+	 * If the _future_ contains no dependency, then
+	 * the resource will be loaded only once.
 	 */
-	(shouldUpdate?: (current: T) => boolean): T;
+	(dependency?: K): T;
 	/**
 	 * If fetching resource is failed, this functions will
 	 * return a reason of the fail.
@@ -18,16 +20,22 @@ export interface Resource<T> {
 }
 
 /** Loads asynchronous resources. */
-export const lazy = <T>(future: () => Promise<T>, fallback: T): Resource<T> => {
+export const lazy = <T, K>(
+	future: (dependency?: K) => Promise<T>,
+	fallback: T,
+): Resource<T, K> => {
 	const error = data<Error | undefined>(undefined);
 	const value = data(fallback);
 	const loading = data(false);
 
-	const fn = (shouldUpdate?: (current: T) => boolean) => {
-		if (shouldUpdate?.(value()) ?? Object.is(value(), fallback)) {
+	const fn = (dependency?: K) => {
+		if (
+			Object.is(value(), fallback) ||
+			(dependency !== undefined && future.length > 0)
+		) {
 			loading(true);
 
-			future()
+			future(dependency)
 				.then(value, (_error: Error) => {
 					error(_error);
 					value(fallback);
@@ -52,5 +60,5 @@ export const lazy = <T>(future: () => Promise<T>, fallback: T): Resource<T> => {
 		configurable: false,
 	});
 
-	return fn as Resource<T>;
+	return fn as Resource<T, K>;
 };

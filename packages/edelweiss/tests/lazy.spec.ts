@@ -24,15 +24,25 @@ describe('lazy', () => {
 		});
 	});
 
-	test('that returned function accepts predicate that signals if resource should be refetched', (done) => {
-		const a = lazy(() => Promise.resolve('a'), '');
+	test('that future function can receive a value from the returned function', (done) => {
+		const a = lazy((value?: string) => Promise.resolve(value), '');
 
-		const i = jest.fn(() => a(() => false));
-
-		effect(i);
+		a('foo');
 
 		setTimeout(() => {
-			expect(a(() => false)).toBe('');
+			expect(a()).toBe('foo');
+			done();
+		});
+	});
+
+	it('should not refetch resource if no dependency was passed to the caller', (done) => {
+		const a = lazy((value?: string) => Promise.resolve(value), '');
+
+		a('foo');
+		a();
+
+		setTimeout(() => {
+			expect(a()).toBe('foo');
 			done();
 		});
 	});

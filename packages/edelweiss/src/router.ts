@@ -35,7 +35,14 @@ export interface Route {
 		| ((...parameters: ReadonlyArray<string>) => Fragment);
 }
 
-const current = data(window.location.pathname);
+/**
+ * Navigates to the _path_ or returns
+ * the current page path.
+ *
+ * If no route is defined for the _path_,
+ * then the last route will be rendered.
+ */
+export const current = data(window.location.pathname);
 
 /**
  * Creates reactive router.
@@ -61,21 +68,13 @@ export const router =
 			: route.template;
 	};
 
-/**
- * Navigates to the _path_.
- * If no route is defined for _path_,
- * then route with `notFound` property will
- * be rendered. Otherwise - default _not found_ route.
- */
-export const to = (path: string) => current(path);
-
 // Handles routing that are accomplished with browser's buttons
 // or through _History API_:
 //  - forward
 //  - back
 window.addEventListener('popstate', (event: PopStateEvent) => {
 	if (event.state) {
-		to(event.state.path);
+		current(event.state.path);
 	}
 });
 
@@ -85,7 +84,7 @@ window.addEventListener('popstate', (event: PopStateEvent) => {
  * `router`.
  */
 export class RouteLinkElement extends CustomHTMLElement {
-	static tagName = 'route-link';
+	static readonly tagName = 'route-link';
 
 	constructor() {
 		super();
@@ -93,7 +92,7 @@ export class RouteLinkElement extends CustomHTMLElement {
 		this.addEventListener('click', () => {
 			const href = this.getAttribute('href');
 			if (href !== null) {
-				to(href);
+				current(href);
 			}
 		});
 	}

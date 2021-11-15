@@ -5,7 +5,7 @@ export { batch } from './core/reactive/batch';
 export { effect } from './core/reactive/effect';
 export { untrack } from './core/reactive/untrack';
 export { cleanup } from './core/reactive/cleanup';
-export { to, router } from './router';
+export { current, router } from './router';
 export { CustomHTMLElement } from './custom_html_element';
 export { render, renderToString } from './render';
 export { language, languages, translate, translations } from './i18n';
