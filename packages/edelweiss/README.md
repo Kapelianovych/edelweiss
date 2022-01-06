@@ -494,7 +494,7 @@ const template = html`<route-link href="/">Home</route-link>`;
 
 ### Internationalization
 
-For supporting different languages on site, Edelweiss suggests `i18n` module.
+For supporting different languages on site, Edelweiss suggests a `i18n` module.
 
 To add a new language, call `translations` function. It accepts objects with two properties: first - a language code (`code`) and second - object of the `Translation` type (`texts`).
 
@@ -536,7 +536,7 @@ translations({ code: 'en', texts: { go: 'Go to the {place}.' } });
 const template = html`<p>${translate('go', { place: 'store' })}</p>`;
 ```
 
-When language of the site need to be changed call `language` function. It accepts language's code.
+When the language of the site needs to be changed, call the `language` function. It accepts a language's code.
 
 ```ts
 // All sentences that was returned by `translate` function will be changed according to language code.
