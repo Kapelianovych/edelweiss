@@ -37,11 +37,11 @@ You need to write a valid HTML there. Though there is a special syntax for handl
 For attaching an event listener to element write name of the event prepended by `@` symbol as an attribute of an element and pass to it a value of `EventListenerOrEventListenerObject` type. So simple! 😉
 
 ```ts
-const template = html`<button
-	@click=${(event: MouseEvent) => console.log(event.target)}
->
-	Click me!
-</button>`;
+const template = html`
+	<button @click=${(event: MouseEvent) => console.log(event.target)}>
+		Click me!
+	</button>
+`;
 ```
 
 #### Attaching value to element's property
@@ -80,11 +80,13 @@ There is possibility to make some action in response of element's lifecycle. The
 You can attach to them a callback, that will be executed with the element itself as the first parameter. In order to do that write name of the event prepended by `:` character and pass to it a callback function.
 
 ```ts
-const template = html`<p
-	:mounted=${(element: HTMLParagraphElement) => {
-		/* Do some action. */
-	}}
-></p>`;
+const template = html`
+	<p
+		:mounted=${(element: HTMLParagraphElement) => {
+			/* Do some action. */
+		}}
+	></p>
+`;
 ```
 
 > If the callback is asynchronous, then it will not be awaited, so there may be inconsistencies if such hook is attached to `will-unmount` hook, because element can be removed before hook is done executing.
@@ -126,7 +128,7 @@ Library contains `CustomHTMLElement` class for easy creating [custom elements](h
 ```ts
 class MyCustomElement extends CustomHTMLElement {
 	template(): Fragment {
-		return html`<p>It is custom element</p>`;
+		return html`<p>It is a custom element</p>`;
 	}
 }
 // then register it
@@ -150,7 +152,7 @@ class MyCustomElement extends CustomHTMLElement {
 	}
 
 	template(): Fragment {
-		return html`<p>It is custom element with ${this.dataColor}</p>`;
+		return html`<p>It is a custom element with ${this.dataColor}</p>`;
 	}
 }
 ```
@@ -168,11 +170,13 @@ class MyCustomElement extends CustomHTMLElement {
 	}
 
 	template(): Fragment {
-		return html`<p>
-			It is custom element with ${() =>
-				// In HTML will be inserted either 'error' or 'success' value
-				this.dataColor === 'red' ? 'error' : 'success'}
-		</p>`;
+		return html`
+			<p>
+				It is a custom element with ${() =>
+					// In HTML will be inserted either 'error' or 'success' value
+					this.dataColor === 'red' ? 'error' : 'success'}
+			</p>
+		`;
 	}
 }
 ```
@@ -202,9 +206,9 @@ class MyCustomElement extends CustomHTMLElement {
 	}
 
 	template(): Fragment {
-		return html`<p>
-			It is custom element with ${() => this.dataColor ?? 'transparent'}
-		</p>`;
+		return html`
+			<p>It is custom element with ${() => this.dataColor ?? 'transparent'}</p>
+		`;
 	}
 }
 ```
@@ -492,28 +496,28 @@ const template = html`<route-link href="/">Home</route-link>`;
 
 For supporting different languages on site, Edelweiss suggests `i18n` module.
 
-To add a new language, call `translations` function. It accepts tuples which have two values inside: first - a language code and second - object of the `Translation` type.
+To add a new language, call `translations` function. It accepts objects with two properties: first - a language code (`code`) and second - object of the `Translation` type (`texts`).
 
 ```ts
 import { translations } from '@prostory/edelweiss';
 
 // You can call this function as many time as you want to add any number of languages.
 translations(
-	[
-		'en',
-		{
+	{
+		code: 'en',
+		texts: {
 			title: 'Great title',
 			article: { subtitle: 'Sub', body: 'Lorem ipsum...' },
 		},
-	],
-	[
-		'uk',
-		{
+	},
+	{
+		code: 'uk',
+		texts: {
 			title: 'Чудовий заголовок',
 			article: { subtitle: 'Підзаголовок', body: 'Щось розумне...' },
 		},
-	],
-	// other tuples
+	},
+	// other objects
 );
 ```
 
@@ -527,7 +531,7 @@ const template = html`<p>${translate('article.body')}</p>`;
 You can insert inside a text some values. In order to do that in translation object define a place for it with the pattern: `{variableName}` and pass a plain object with a key equals to `variableName` and a value - whatever you want to insert into the text.
 
 ```ts
-translations(['en', { go: 'Go to the {place}.' }]);
+translations({ code: 'en', texts: { go: 'Go to the {place}.' } });
 
 const template = html`<p>${translate('go', { place: 'store' })}</p>`;
 ```

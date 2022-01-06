@@ -22,5 +22,5 @@ export const renderToString = (part: Fragment): string =>
 			node instanceof Comment
 				? raw + createComment(node.textContent ?? '')
 				: raw + ((node as Element).outerHTML ?? node.textContent ?? ''),
-		''
+		'',
 	);
