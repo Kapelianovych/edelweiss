@@ -1,12 +1,17 @@
 import { isComment } from '../utilities/node_type';
 import { processHook } from './hook';
-import { processNodes } from './nodes';
-import { RawDOMFragment } from '../fragment';
 import { processProperty } from './property';
+import { Marker, MarkerType } from '../marker';
 import { processEventListener } from './event_attribute';
-import { processToggleAttribute } from './toggle_attribute';
-import { processRegularAttribute } from './regular_attribute';
-import { Template, templateSymbol } from './entity';
+import { commentsToRemove, processNodes, processNodesString } from './nodes';
+import {
+	processToggleAttribute,
+	processToggleAttributeString,
+} from './toggle_attribute';
+import {
+	processRegularAttribute,
+	processRegularAttributeString,
+} from './regular_attribute';
 import {
 	HOOK_ATTRIBUTE_PREFIX,
 	EVENT_ATTRIBUTE_PREFIX,
@@ -16,7 +21,7 @@ import {
 
 const NO_PREFIX = '__no_prefix';
 
-const PREFIX = {
+const PREFIXES_MAP = {
 	[NO_PREFIX]: processRegularAttribute,
 	[HOOK_ATTRIBUTE_PREFIX]: processHook,
 	[EVENT_ATTRIBUTE_PREFIX]: processEventListener,
@@ -25,9 +30,9 @@ const PREFIX = {
 };
 
 const findAttributeHandler = (name: string) =>
-	PREFIX[
-		(Object.keys(PREFIX).find((prefix) => name.startsWith(prefix)) ??
-			NO_PREFIX) as keyof typeof PREFIX
+	PREFIXES_MAP[
+		(Object.keys(PREFIXES_MAP).find((prefix) => name.startsWith(prefix)) ??
+			NO_PREFIX) as keyof typeof PREFIXES_MAP
 	];
 
 /**
@@ -38,10 +43,10 @@ const findAttributeHandler = (name: string) =>
  *     Here bridges are established.
  *  3. Removing marker and relative unneeded stuff (special attributes).
  */
-const fill = ({ markers, content }: RawDOMFragment): DocumentFragment => {
+export const fillNodes = (nodes: Node, markers: Map<string, Marker>): Node => {
 	const walker = document.createTreeWalker(
-		content,
-		NodeFilter.SHOW_ELEMENT + NodeFilter.SHOW_COMMENT
+		nodes,
+		NodeFilter.SHOW_ELEMENT + NodeFilter.SHOW_COMMENT,
 	);
 
 	while (walker.nextNode() !== null) {
@@ -53,25 +58,34 @@ const fill = ({ markers, content }: RawDOMFragment): DocumentFragment => {
 							walker.currentNode as Element,
 							name,
 							value,
-							markers
-						)
+							markers,
+						),
 			  );
 	}
 
-	return content;
+	commentsToRemove.forEach((comment) => comment.remove());
+	commentsToRemove.clear();
+
+	return nodes;
 };
 
-export const createTemplate = ({
-	markers,
-	content,
-}: RawDOMFragment): Template => ({
-	_id: templateSymbol,
-	markers,
-	fragment: content,
-	clone: () =>
-		createTemplate({
-			markers,
-			content: content.cloneNode(true) as DocumentFragment,
-		}),
-	build: () => fill({ markers, content }),
-});
+export const fillString = (
+	nodes: string,
+	markers: Map<string, Marker>,
+): string => {
+	const arrayOfMarkers = Array.from(markers.values());
+
+	return arrayOfMarkers
+		.filter(
+			(marker) =>
+				marker.type === MarkerType.NODE ||
+				marker.type === MarkerType.TOGGLE_ATTRIBUTE,
+		)
+		.reduce(
+			(html, marker) =>
+				marker.type === MarkerType.NODE
+					? processNodesString(html, marker)
+					: processToggleAttributeString(html, marker),
+			processRegularAttributeString(nodes, arrayOfMarkers),
+		);
+};

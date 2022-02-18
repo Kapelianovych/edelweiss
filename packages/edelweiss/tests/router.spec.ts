@@ -1,10 +1,9 @@
-import './crypto_for_jest';
 import { html, router, current } from '../src';
 
 describe('router', () => {
 	beforeAll(() => (window.location.pathname = '/'));
 
-	test('should insert template based on current location', () => {
+	test('should insert processing based on current location', () => {
 		const page = router(
 			{
 				pattern: '/',
@@ -18,15 +17,15 @@ describe('router', () => {
 
 		const template = html` <div>${page}</div> `;
 
-		expect(template.clone().build().childNodes.length).toBe(
+		expect(template.build<Node>().childNodes.length).toBe(
 			3 /* start comment + text + end comment */,
 		);
-		expect(template.clone().build().childNodes.item(1).textContent).toMatch(
+		expect(template.build<Node>().childNodes.item(1).textContent).toMatch(
 			'start',
 		);
 	});
 
-	test('should update template', () => {
+	test('should update processing', () => {
 		const page = router(
 			{
 				pattern: '/',
@@ -40,16 +39,16 @@ describe('router', () => {
 
 		const template = html` <div>${page}</div> `;
 
-		expect(template.clone().build().childNodes.item(1).textContent).toMatch(
+		expect(template.build<Node>().childNodes.item(1).textContent).toMatch(
 			'start',
 		);
 
 		current('/one');
 
-		expect(template.clone().build().childNodes.length).toBe(
+		expect(template.build<Node>().childNodes.length).toBe(
 			3 /* start comment + text + end comment */,
 		);
-		expect(template.clone().build().childNodes.item(1).textContent).toMatch(
+		expect(template.build<Node>().childNodes.item(1).textContent).toMatch(
 			'one',
 		);
 	});
@@ -70,7 +69,7 @@ describe('router', () => {
 
 		current('/second');
 
-		expect(template.clone().build().firstElementChild?.innerHTML).toMatch(
+		expect(template.build<Element>().firstElementChild?.innerHTML).toMatch(
 			/one/,
 		);
 	});
@@ -80,7 +79,7 @@ describe('router', () => {
 			<div><route-link href="/custom">Click me</route-link></div>
 		`;
 
-		expect(template.clone().build().querySelector('route-link')).toBeDefined();
+		expect(template.build<Element>().querySelector('route-link')).toBeDefined();
 	});
 
 	it('should move from page to page', () => {
@@ -97,26 +96,26 @@ describe('router', () => {
 
 		const template = html` <div>${page}</div> `;
 
-		const buildedTemplate = template.clone().build();
+		const builtTemplate = template.build<Node>();
 
 		current('/');
 
-		expect(buildedTemplate.textContent).toContain('start');
+		expect(builtTemplate.textContent).toContain('start');
 
 		current('/one');
 
-		expect(buildedTemplate.textContent).toContain('one');
+		expect(builtTemplate.textContent).toContain('one');
 
 		current('/');
 
-		expect(buildedTemplate.textContent).toContain('start');
+		expect(builtTemplate.textContent).toContain('start');
 
 		current('/one');
 
-		expect(buildedTemplate.textContent).toContain('one');
+		expect(builtTemplate.textContent).toContain('one');
 	});
 
-	it('should render property template (not a function)', () => {
+	it('should render property processing (not a function)', () => {
 		const page = router({
 			pattern: '/',
 			template: html`Property template`,
@@ -126,8 +125,8 @@ describe('router', () => {
 
 		current('/');
 
-		const buildedTemplate = template.clone().build();
+		const builtTemplate = template.build<Node>();
 
-		expect(buildedTemplate.textContent).toContain('Property template');
+		expect(builtTemplate.textContent).toContain('Property template');
 	});
 });

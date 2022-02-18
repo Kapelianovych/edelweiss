@@ -1,6 +1,6 @@
 import { effect } from '../reactive/effect';
+import { Marker } from '../marker';
 import { isFunction } from '../utilities/checks';
-import { RawDOMFragment } from '../fragment';
 import { callHook, Hooks } from '../hooks';
 import { PROPERTY_ATTRIBUTE_PREFIX } from '../constants';
 
@@ -11,7 +11,7 @@ export const processProperty = (
 	currentNode: Element,
 	name: string,
 	value: string,
-	markers: RawDOMFragment['markers'],
+	markers: Map<string, Marker>,
 ): void => {
 	const propertyMarker = markers.get(value);
 

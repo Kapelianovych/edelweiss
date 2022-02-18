@@ -1,5 +1,9 @@
 import { createMarker, Marker } from './marker';
 import {
+	HOOK_SYMBOL,
+	EVENT_SYMBOL,
+	TOGGLE_SYMBOL,
+	PROPERTY_SYMBOL,
 	HOOK_ATTRIBUTE_PREFIX,
 	EVENT_ATTRIBUTE_PREFIX,
 	TOGGLE_ATTRIBUTE_PREFIX,
@@ -12,13 +16,13 @@ import {
  *  2. attribute value (may not be).
  */
 const PRECEDING_ATTRIBUTE_REGEXP =
-	/(\S+)=["']?((?:.(?!["']?\s+(?:\S+)=|\s*\/?[>"']))+.)?$/;
+	/(\S+)=["']?((?:.(?!["']?\s+\S+=|\s*\/?[>"']))+.)?$/;
 
 const SPECIAL_SYMBOLS = {
-	'@': EVENT_ATTRIBUTE_PREFIX,
-	'?': TOGGLE_ATTRIBUTE_PREFIX,
-	':': HOOK_ATTRIBUTE_PREFIX,
-	'.': PROPERTY_ATTRIBUTE_PREFIX,
+	[HOOK_SYMBOL]: HOOK_ATTRIBUTE_PREFIX,
+	[EVENT_SYMBOL]: EVENT_ATTRIBUTE_PREFIX,
+	[TOGGLE_SYMBOL]: TOGGLE_ATTRIBUTE_PREFIX,
+	[PROPERTY_SYMBOL]: PROPERTY_ATTRIBUTE_PREFIX,
 };
 
 export interface Content {
@@ -26,14 +30,9 @@ export interface Content {
 	readonly markers: Map<string, Marker>;
 }
 
-/**
- * This function is called at first. It concatenates all parts of HTML and
- * inserts markers for values: either static or dynamic. Markers
- * differ by position - attribute or node.
- */
 export const createContent = (
 	statics: TemplateStringsArray,
-	...values: ReadonlyArray<unknown>
+	values: ReadonlyArray<unknown>,
 ): Content => {
 	const markers = new Map<string, Marker>();
 
@@ -49,8 +48,9 @@ export const createContent = (
 				PRECEDING_ATTRIBUTE_REGEXP.exec(previousTemplate)?.[1];
 
 			const marker = createMarker(
+				previousTemplate,
 				values[index],
-				attributeName !== undefined ? 'attribute' : 'node'
+				attributeName?.charAt(0),
 			);
 			const previousTemplatePart: string =
 				attributeName !== undefined &&
@@ -59,7 +59,7 @@ export const createContent = (
 							attributeName,
 							SPECIAL_SYMBOLS[
 								attributeName.charAt(0) as keyof typeof SPECIAL_SYMBOLS
-							] + attributeName.slice(1)
+							] + attributeName.slice(1),
 					  )
 					: previousTemplate;
 

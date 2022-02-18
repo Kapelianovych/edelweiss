@@ -213,7 +213,7 @@ class MyCustomElement extends CustomHTMLElement {
 }
 ```
 
-Also you can freely override custom element's lifecycle methods:
+Also, you can freely override custom element's lifecycle methods:
 
 - `connectedCallback`
 - `disconnectedCallback`
@@ -224,29 +224,39 @@ While overriding last method always call `super.attributeChangedCallback(name, o
 
 > If you want to override `constructor`, then you should also call `super()` at first.
 
-### Render
+### render
 
 For inserting generated HTML into DOM, call `render` function. It accepts element from DOM to which HTML should be inserted and `HTMLTemplateElement` as container of HTML.
 
 ```ts
 const template = html`<p>Hello world!</p>`;
 
-render(document.body, template);
+render(template, document.body);
 ```
 
 You can safely insert HTML to element that already has children - `render` function just prepends HTML to the container element.
 
-Also there is `renderToString` function, that converts DOM to string. It accepts only `HTMLTemplateElement`, whose content need to be stringified.
+The second parameter of `render` function can be omitted. In that case an HTML string will be returned.
 
 ```ts
 const template = html`<p>Hello world!</p>`;
 
-const stringifiedTemplate = renderToString(template);
+const stringifiedTemplate = render(template);
 ```
 
-> This function is intended to be used with SSR. Though it can be used in browser environment as well.
->
-> Note, that event listeners and element's life hooks aren't preserved after converting DOM to string.
+> This function is intended to use with SSR. Though it can be used in browser environment as well.
+> It returns HTML that can be hydrated.
+
+### hydrate
+
+The same as `render`, but is used to hydrate a container whose HTML contents were rendered as a string.
+Edelweiss will try to inject event listeners, hooks and reactive parts of a markup.
+
+```ts
+hydrate(fragment, startNode);
+```
+
+Edelweiss will hydrate only those nodes that are siblings to _startNode_ and its children. It is not even necessary that fragment describes a markup of the _startNode_.
 
 ### reactivity
 
@@ -444,7 +454,7 @@ export interface Route {
 	 */
 	readonly pattern: string;
 	/**
-	 * Holds a template for a route.
+	 * Holds a processing for a route.
 	 * Can be either `Fragment` directly or function
 	 * that accepts parameters that are declared in
 	 * _pattern_ property and returns `Fragment` value.

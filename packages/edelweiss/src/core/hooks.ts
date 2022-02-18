@@ -17,13 +17,13 @@ export interface Hook {
 export enum Hooks {
 	MOUNTED = 'mounted',
 	UPDATED = 'updated',
-	'WILL_UNMOUNT' = 'will-unmount',
+	WILL_UNMOUNT = 'will-unmount',
 }
 
 const hookMaps = {
 	[Hooks.MOUNTED]: new WeakMap<Element, Hook>(),
 	[Hooks.UPDATED]: new WeakMap<Element, Hook>(),
-	[Hooks['WILL_UNMOUNT']]: new WeakMap<Element, Hook>(),
+	[Hooks.WILL_UNMOUNT]: new WeakMap<Element, Hook>(),
 } as const;
 
 export const callHook = (name: Hooks, node: Element): void =>
@@ -36,7 +36,7 @@ export const registerHook = (name: Hooks, node: Element, hook: Hook): void => {
 
 export const callHookOnElementWithChildren = (
 	name: Hooks,
-	element: Node
+	element: Node,
 ): void => {
 	if (isElement(element)) {
 		callHook(name, element);

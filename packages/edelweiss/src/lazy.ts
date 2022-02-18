@@ -49,14 +49,14 @@ export const lazy = <T, K>(
 	Reflect.defineProperty(fn, 'error', {
 		value: () => error(),
 		writable: false,
-		enumerable: false,
+		enumerable: true,
 		configurable: false,
 	});
 
 	Reflect.defineProperty(fn, 'loading', {
 		value: () => loading(),
 		writable: false,
-		enumerable: false,
+		enumerable: true,
 		configurable: false,
 	});
 

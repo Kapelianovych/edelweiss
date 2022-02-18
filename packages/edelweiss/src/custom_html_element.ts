@@ -1,5 +1,6 @@
 import { render } from './render';
-import { Fragment } from './core/template/collect';
+import { renderer } from './core/renderer';
+import { Fragment } from './core/processing/collect';
 import { data, Data } from './core/reactive/data';
 
 /** Converts kebab-case to camelCase. */
@@ -27,7 +28,7 @@ const attachAccessorsTo = (target: CustomHTMLElement & Properties): void => {
 			},
 			get: () => reactiveProperties[key](),
 			enumerable: true,
-			configurable: true,
+			configurable: false,
 		}),
 	);
 };
@@ -45,9 +46,9 @@ interface Properties {
 
 /**
  * Parent class for custom elements.
- * At least `template` method need to be defined.
+ * At least `processing` method need to be defined.
  */
-export abstract class CustomHTMLElement extends HTMLElement {
+export abstract class CustomHTMLElement extends renderer.getHTMLElement() {
 	/**
 	 * Returns an array of attribute names to monitor for changes.
 	 * For declared attributes same reactive properties will be created.
@@ -70,10 +71,10 @@ export abstract class CustomHTMLElement extends HTMLElement {
 		attachAccessorsTo(this as unknown as CustomHTMLElement & Properties);
 
 		render(
+			this.template(),
 			this.attachShadow({
 				mode: 'open',
 			}),
-			this.template(),
 		);
 	}
 

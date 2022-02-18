@@ -1,11 +1,11 @@
-import { RawDOMFragment } from '../fragment';
+import { Marker } from '../marker';
 import { EVENT_ATTRIBUTE_PREFIX } from '../constants';
 
 export const processEventListener = (
 	currentNode: Element,
 	name: string,
 	value: string,
-	markers: RawDOMFragment['markers']
+	markers: Map<string, Marker>,
 ): void => {
 	const eventMarker = markers.get(value);
 
@@ -15,7 +15,7 @@ export const processEventListener = (
 		// created.
 		currentNode.addEventListener(
 			name.replace(EVENT_ATTRIBUTE_PREFIX, ''),
-			eventMarker.value as EventListenerOrEventListenerObject
+			eventMarker.value as EventListenerOrEventListenerObject,
 		);
 
 		currentNode.removeAttribute(name);

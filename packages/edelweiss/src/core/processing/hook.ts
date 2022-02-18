@@ -1,4 +1,4 @@
-import { RawDOMFragment } from '../fragment';
+import { Marker } from '../marker';
 import { HOOK_ATTRIBUTE_PREFIX } from '../constants';
 import { Hooks, registerHook, Hook } from '../hooks';
 
@@ -6,7 +6,7 @@ export const processHook = (
 	node: Element,
 	attributeName: string,
 	attributeValue: string,
-	markers: RawDOMFragment['markers']
+	markers: Map<string, Marker>,
 ): void => {
 	const hookMarker = markers.get(attributeValue);
 
@@ -16,7 +16,7 @@ export const processHook = (
 		switch (hookName) {
 			case Hooks.MOUNTED:
 			case Hooks.UPDATED:
-			case Hooks['WILL_UNMOUNT']:
+			case Hooks.WILL_UNMOUNT:
 				registerHook(hookName, node, hookMarker.value as Hook);
 				break;
 			default:

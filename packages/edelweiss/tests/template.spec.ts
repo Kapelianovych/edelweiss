@@ -1,17 +1,7 @@
-import './crypto_for_jest';
-import { isTemplate } from '../src/core/template/entity';
 import { data, html, render } from '../src';
 
 const createSVG = () =>
 	document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-
-describe('isTemplate', () => {
-	it('should identify template only', () => {
-		expect(isTemplate({})).toBe(false);
-		expect(isTemplate([])).toBe(false);
-		expect(isTemplate(html``)).toBe(true);
-	});
-});
 
 describe('html', () => {
 	beforeAll(() => (document.body.innerHTML = ''));
@@ -19,16 +9,15 @@ describe('html', () => {
 	test('html creates DOM nodes', () => {
 		const template = html`<p></p>`;
 
-		expect(template.clone().build().childElementCount).toBe(1);
+		expect(template.build<DocumentFragment>().childElementCount).toBe(1);
 		expect(
 			template
-				.clone()
-				.build()
+				.build<DocumentFragment>()
 				.firstElementChild?.isEqualNode(document.createElement('p')),
 		).toBe(true);
 	});
 
-	it('should not build final DOM while creating template', () => {
+	it('should not build final DOM while creating processing', () => {
 		let isChanged = false;
 
 		html`<p :mounted=${() => void (isChanged = !isChanged)}></p>`;
@@ -36,43 +25,43 @@ describe('html', () => {
 		expect(isChanged).toBe(false);
 	});
 
-	test('html inserts template as node into HTML', () => {
+	test('html inserts processing as node into HTML', () => {
 		const template = html`<p>${html`yo`}</p>`;
 
-		expect(template.clone().build().firstElementChild?.innerHTML).toMatch('yo');
+		expect(template.build<DocumentFragment>().childNodes.length).toBe(1);
 		expect(
-			template.clone().build().firstElementChild?.childNodes.item(0).nodeType,
-		).toBe(Node.COMMENT_NODE);
+			template.build<DocumentFragment>().firstElementChild?.innerHTML,
+		).toMatch('yo');
 		expect(
-			template.clone().build().firstElementChild?.childNodes.item(1).nodeType,
+			template.build<DocumentFragment>().firstElementChild?.childNodes.item(0)
+				.nodeType,
 		).toBe(Node.TEXT_NODE);
-		expect(
-			template.clone().build().firstElementChild?.childNodes.item(2).nodeType,
-		).toBe(Node.COMMENT_NODE);
 	});
 
 	test('html inserts array of nodes into HTML', () => {
 		const template = html`<p>${[html`foo`, 'bar', html`baz`]}</p>`;
 
-		expect(template.clone().build().firstElementChild?.childNodes.length).toBe(
-			5 /* 3 Texts + 2 Comments (start and end) */,
-		);
-		expect(template.clone().build().firstElementChild?.innerHTML).toMatch(
-			'foo',
-		);
-		expect(template.clone().build().firstElementChild?.innerHTML).toMatch(
-			'bar',
-		);
-		expect(template.clone().build().firstElementChild?.innerHTML).toMatch(
-			'baz',
-		);
+		expect(
+			template.build<DocumentFragment>().firstElementChild?.childNodes.length,
+		).toBe(3);
+		expect(
+			template.build<DocumentFragment>().firstElementChild?.innerHTML,
+		).toMatch('foo');
+		expect(
+			template.build<DocumentFragment>().firstElementChild?.innerHTML,
+		).toMatch('bar');
+		expect(
+			template.build<DocumentFragment>().firstElementChild?.innerHTML,
+		).toMatch('baz');
 	});
 
 	test('html should insert single attribute value', () => {
 		const template = html`<p class="${'header'}"></p>`;
 
 		expect(
-			template.clone().build().firstElementChild?.getAttribute('class'),
+			template
+				.build<DocumentFragment>()
+				.firstElementChild?.getAttribute('class'),
 		).toMatch('header');
 	});
 
@@ -80,7 +69,9 @@ describe('html', () => {
 		const template = html`<p class="useful ${'value'}"></p>`;
 
 		expect(
-			template.clone().build().firstElementChild?.getAttribute('class'),
+			template
+				.build<DocumentFragment>()
+				.firstElementChild?.getAttribute('class'),
 		).toMatch('useful value');
 	});
 
@@ -90,7 +81,7 @@ describe('html', () => {
 			class="static ${'dynamic'} ${changing} another"
 		></p>`;
 
-		const p = template.clone().build().firstElementChild!;
+		const p = template.build<DocumentFragment>().firstElementChild!;
 
 		expect(p.getAttribute('class')).toBe('static dynamic foo another');
 
@@ -103,7 +94,9 @@ describe('html', () => {
 		const template = html`<p ?readonly="${true}"></p>`;
 
 		expect(
-			template.clone().build().firstElementChild?.hasAttribute('readonly'),
+			template
+				.build<DocumentFragment>()
+				.firstElementChild?.hasAttribute('readonly'),
 		).toBe(true);
 	});
 
@@ -111,7 +104,9 @@ describe('html', () => {
 		const template = html`<p ?readonly="${false}"></p>`;
 
 		expect(
-			template.clone().build().firstElementChild?.hasAttribute('readonly'),
+			template
+				.build<DocumentFragment>()
+				.firstElementChild?.hasAttribute('readonly'),
 		).toBe(false);
 	});
 
@@ -122,7 +117,9 @@ describe('html', () => {
 
 		expect(clicked).toBe(false);
 
-		(template.clone().build().firstElementChild as HTMLButtonElement)?.click();
+		(
+			template.build<DocumentFragment>().firstElementChild as HTMLButtonElement
+		)?.click();
 
 		expect(clicked).toBe(true);
 	});
@@ -131,31 +128,33 @@ describe('html', () => {
 		const template = html`<span .title="${'foo'}"></span>`;
 
 		// @ts-ignore
-		expect(template.clone().build().firstElementChild?.title).toBe('foo');
+		expect(template.build<DocumentFragment>().firstElementChild?.title).toBe(
+			'foo',
+		);
 	});
 
 	it('should insert null and other values except HTMLTemplateElement as text node', () => {
 		const template = html` <span>${null}${undefined}${12345}${true}</span> `;
 
-		expect(template.clone().build().firstElementChild?.innerHTML).toMatch(
-			'null',
-		);
-		expect(template.clone().build().firstElementChild?.innerHTML).toMatch(
-			'undefined',
-		);
-		expect(template.clone().build().firstElementChild?.innerHTML).toMatch(
-			'12345',
-		);
-		expect(template.clone().build().firstElementChild?.innerHTML).toMatch(
-			'true',
-		);
+		expect(
+			template.build<DocumentFragment>().firstElementChild?.innerHTML,
+		).toMatch(/null/);
+		expect(
+			template.build<DocumentFragment>().firstElementChild?.innerHTML,
+		).toMatch(/undefined/);
+		expect(
+			template.build<DocumentFragment>().firstElementChild?.innerHTML,
+		).toMatch(/12345/);
+		expect(
+			template.build<DocumentFragment>().firstElementChild?.innerHTML,
+		).toMatch(/true/);
 	});
 
 	test('should add attribute hook to element', () => {
 		const template = html`<div :mounted=${() => {}}></div>`;
 
 		expect(
-			template.clone().build().querySelector('[data-es-mounted]'),
+			template.build<DocumentFragment>().querySelector('[data-es-mounted]'),
 		).toBeDefined();
 	});
 
@@ -166,7 +165,7 @@ describe('html', () => {
 			Mounted
 		</button>`;
 
-		render(document.body, template);
+		render(template, document.body);
 
 		expect(isButtonMounted).toBe(true);
 	});
@@ -182,7 +181,7 @@ describe('html', () => {
 			</button>
 		`;
 
-		template.clone().build();
+		template.build<DocumentFragment>();
 
 		expect(isElementUpdated).toBe(false);
 	});
@@ -198,7 +197,7 @@ describe('html', () => {
 			</button>
 		`;
 
-		template.clone().build();
+		template.build<DocumentFragment>();
 
 		e('new value');
 
@@ -216,7 +215,7 @@ describe('html', () => {
 			</span>
 		`;
 
-		template.clone().build();
+		template.build<DocumentFragment>();
 
 		e(true);
 
@@ -234,7 +233,7 @@ describe('html', () => {
 			</div>
 		`;
 
-		template.clone().build();
+		template.build<DocumentFragment>();
 
 		e('secret');
 
@@ -255,7 +254,7 @@ describe('html', () => {
 			</p>
 		`;
 
-		template.clone().build();
+		template.build<DocumentFragment>();
 
 		e(true);
 
@@ -272,7 +271,7 @@ describe('html', () => {
 			:updated=${(p: HTMLParagraphElement) => (element = p)}
 		></p>`;
 
-		template.clone().build();
+		template.build<DocumentFragment>();
 
 		e(true);
 
@@ -285,13 +284,17 @@ describe('html', () => {
 		const template = html` <p class="foo ${e}"></p> `;
 
 		expect(
-			template.clone().build().firstElementChild?.getAttribute('class'),
+			template
+				.build<DocumentFragment>()
+				.firstElementChild?.getAttribute('class'),
 		).toMatch(/^foo bar$/);
 
 		e('baz');
 
 		expect(
-			template.clone().build().firstElementChild?.getAttribute('class'),
+			template
+				.build<DocumentFragment>()
+				.firstElementChild?.getAttribute('class'),
 		).toMatch(/^foo baz$/);
 	});
 
@@ -301,38 +304,45 @@ describe('html', () => {
 		const template = html` <input type="${e}" /> `;
 
 		expect(
-			template.clone().build().firstElementChild?.getAttribute('type'),
+			template
+				.build<DocumentFragment>()
+				.firstElementChild?.getAttribute('type'),
 		).toMatch(/^text$/);
 
 		e('email');
 
 		expect(
-			template.clone().build().firstElementChild?.getAttribute('type'),
+			template
+				.build<DocumentFragment>()
+				.firstElementChild?.getAttribute('type'),
 		).toMatch(/^email$/);
 	});
 
-	test('should insert HTML elements into template', () => {
+	test('should insert HTML elements into processing', () => {
 		const div = document.createElement('div');
 		div.className = 'self-constructed';
 
 		const template = html`<div class="outer">${div}</div>`;
 		expect(
-			template.clone().build().querySelector('.self-constructed'),
+			template.build<DocumentFragment>().querySelector('.self-constructed'),
 		).toBeDefined();
 	});
 
-	test('should insert SVG elements into template', () => {
+	test('should insert SVG elements into processing', () => {
 		const svg = createSVG();
 		const template = html`<div class="svg-wrapper">${svg}</div>`;
 
-		expect(template.clone().build().querySelector('svg')).toBeDefined();
+		expect(
+			template.build<DocumentFragment>().querySelector('svg'),
+		).toBeDefined();
 	});
 
 	test('should not accept document object', () => {
 		const template = html`<div class="parent">${document}</div>`;
 
 		expect(
-			template.clone().build().querySelector('.parent')?.children.length,
+			template.build<DocumentFragment>().querySelector('.parent')?.children
+				.length,
 		).toBe(0);
 	});
 
@@ -340,7 +350,8 @@ describe('html', () => {
 		const template = html`<div class="parent">${window}</div>`;
 
 		expect(
-			template.clone().build().querySelector('.parent')?.children.length,
+			template.build<DocumentFragment>().querySelector('.parent')?.children
+				.length,
 		).toBe(0);
 	});
 
@@ -352,9 +363,9 @@ describe('html', () => {
 
 		const template = html`${fragment}`;
 
-		const buildedTemplate = template.clone().build();
+		const builtTemplate = template.build<DocumentFragment>();
 
-		expect(buildedTemplate.textContent).toContain(text);
+		expect(builtTemplate.textContent).toContain(text);
 	});
 
 	it('should accept HTMLTemplateElement as a child', () => {
@@ -365,26 +376,8 @@ describe('html', () => {
 
 		const template = html`${element}`;
 
-		const buildedTemplate = template.clone().build();
+		const builtTemplate = template.build<DocumentFragment>();
 
-		expect(buildedTemplate.textContent).toContain(text);
-	});
-
-	it('should return same DocumentFragment after building phase', () => {
-		const template = html``;
-
-		expect(template.build()).toBe(template.build());
-	});
-
-	it('should return Template while cloning template', () => {
-		const template = html``;
-
-		expect(isTemplate(template.clone())).toBe(true);
-	});
-
-	it('should return different Templates while cloning template', () => {
-		const template = html``;
-
-		expect(template.clone()).not.toBe(template.clone());
+		expect(builtTemplate.textContent).toContain(text);
 	});
 });

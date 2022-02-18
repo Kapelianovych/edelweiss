@@ -1,4 +1,3 @@
-import './crypto_for_jest';
 import { translate, languages, translations, language } from '../src';
 
 describe('internationalization', () => {

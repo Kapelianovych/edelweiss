@@ -1,7 +1,7 @@
-import { html } from './html';
 import { data } from './core/reactive/data';
+import { html } from './html';
 import { Computed } from './core/reactive/global';
-import { Fragment } from './core/template/collect';
+import { Fragment } from './core/processing/collect';
 import { CustomHTMLElement } from './custom_html_element';
 
 /**
@@ -23,7 +23,7 @@ export interface Route {
 	 */
 	readonly pattern: string;
 	/**
-	 * Holds a template for the route.
+	 * Holds a processing for the route.
 	 * Can be either `Fragment` directly or function
 	 * that accepts parameters that are declared in
 	 * _pattern_ property and returns a `Fragment` value.
@@ -42,7 +42,7 @@ export interface Route {
  * If no route is defined for the _path_,
  * then the last route will be rendered.
  */
-export const current = data(window.location.pathname);
+export const current = data(globalThis.window?.location.pathname ?? '/');
 
 /**
  * Creates reactive router.
@@ -59,7 +59,7 @@ export const router =
 			// Possibly "Not found" page.
 			routes[routes.length - 1];
 
-		window.history.pushState({ path }, '', path);
+		globalThis.window?.history.pushState({ path }, '', path);
 
 		return typeof route.template === 'function'
 			? route.template(
@@ -72,7 +72,7 @@ export const router =
 // or through _History API_:
 //  - forward
 //  - back
-window.addEventListener('popstate', (event: PopStateEvent) => {
+globalThis.window?.addEventListener('popstate', (event: PopStateEvent) => {
 	if (event.state) {
 		current(event.state.path);
 	}
@@ -111,6 +111,6 @@ export class RouteLinkElement extends CustomHTMLElement {
 	}
 }
 
-if (customElements.get(RouteLinkElement.tagName) === undefined) {
-	customElements.define(RouteLinkElement.tagName, RouteLinkElement);
+if (globalThis.customElements?.get(RouteLinkElement.tagName) === undefined) {
+	globalThis.customElements?.define(RouteLinkElement.tagName, RouteLinkElement);
 }

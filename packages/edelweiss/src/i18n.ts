@@ -11,7 +11,7 @@ export interface Translation {
 	readonly texts: Texts;
 }
 
-const languageCode = data(window.navigator.language);
+const languageCode = data(globalThis.window?.navigator.language ?? '');
 const translationsCache = new Map<string, Texts>();
 
 /**

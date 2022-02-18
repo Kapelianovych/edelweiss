@@ -1,4 +1,3 @@
-import './crypto_for_jest';
 import { batch, cleanup, data, effect, untrack } from '../src';
 
 describe('data', () => {

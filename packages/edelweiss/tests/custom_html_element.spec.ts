@@ -1,4 +1,3 @@
-import './crypto_for_jest';
 import { html, CustomHTMLElement, Property } from '../src';
 
 describe('CustomHTMLElement', () => {
@@ -39,7 +38,7 @@ describe('CustomHTMLElement', () => {
 		const element = document.createElement('my-element2');
 
 		expect(element.shadowRoot?.innerHTML ?? '').toMatch(
-			/^<div>.+null.+<\/div>$/,
+			/^<div>null<\/div>$/,
 		);
 	});
 
