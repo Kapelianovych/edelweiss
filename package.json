@@ -6,9 +6,9 @@
 	"description": "A couple of libraries for constructing web applications.",
 	"scripts": {
 		"test": "jest",
-		"clean": "lerna run clean",
+		"clean": "npm run clean --workspaces",
 		"prebuild": "npm run test",
-		"build": "lerna run build",
+		"build": "npm run build --workspaces",
 		"release:edelweiss": "npm run release -w @prostory/edelweiss",
 		"release:edelweiss-next": "npm run release:next -w @prostory/edelweiss",
 		"release:edelweiss-cli": "npm run release -w @prostory/edelweiss-cli",
@@ -18,7 +18,9 @@
 		"Edelweiss"
 	],
 	"workspaces": [
-		"packages/*"
+		"packages/edelweiss",
+		"packages/edelweiss-cli",
+		"packages/edelweiss-ssr"
 	],
 	"author": "Kapelianovych Yevhen",
 	"license": "MIT",
@@ -28,7 +30,6 @@
 		"@types/jest": "^27.4.0",
 		"cpy-cli": "^3.1.1",
 		"jest": "^27.5.1",
-		"lerna": "^4.0.0",
 		"prettier": "^2.5.1",
 		"rimraf": "^3.0.2",
 		"rollup": "^2.67.2",
