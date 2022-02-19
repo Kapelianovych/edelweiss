@@ -49,7 +49,7 @@ export const processRegularAttribute = (
 };
 
 const regularAttributesWithMarkers =
-	/\s((?:data-)?\w+)=['"]?((?:[\w-]+\s+)*(?:(?:{{\w+}}\s*)+(?:[\w-]+\s*)*)+)['"]?/g;
+	/\s((?:data-)?\w+)=['"]?(\s*(?:[\w-]+\s+)*(?:(?:{{\w+}}\s*)+(?:[\w-]+\s*)*)+)['"]?/g;
 
 export const processRegularAttributeString = (
 	html: string,
