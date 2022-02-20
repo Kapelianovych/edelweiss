@@ -1,5 +1,6 @@
 import { Template } from './core/template';
 import { renderer } from './core/renderer';
+import { hydrated } from './core/environment';
 import { fillNodes } from './core/processing';
 import { createComment } from './core/utilities/comments';
 import { collect, Fragment } from './core/processing/collect';
@@ -63,4 +64,6 @@ export const hydrate = (fragment: Fragment, startFrom: Node): void => {
 			hydrate(fragmentPart, startFrom),
 		);
 	}
+
+	hydrated(true);
 };

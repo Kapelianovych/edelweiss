@@ -1,5 +1,6 @@
 import { effect } from '../reactive/effect';
 import { Marker } from '../marker';
+import { hydrated } from '../environment';
 import { isFunction } from '../utilities/checks';
 import { collect, Fragment } from './collect';
 import { callHookOnElementWithChildren, Hooks } from '../hooks';
@@ -63,9 +64,13 @@ export const processNodes = (
 
 		isFunction<Fragment>(value)
 			? effect(() => {
-					unmountOldNodes(currentNode);
-					currentNode.after(collect(value()));
-					callMountedHook(currentNode);
+					const nodes = value();
+
+					if (hydrated()) {
+						unmountOldNodes(currentNode);
+						currentNode.after(collect(nodes));
+						callMountedHook(currentNode);
+					}
 			  })
 			: isClosedCommentEmpty(currentNode)
 			? replaceCommentWithStaticNode(currentNode, collect(value))

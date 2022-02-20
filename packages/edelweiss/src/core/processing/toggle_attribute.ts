@@ -1,5 +1,6 @@
 import { effect } from '../reactive/effect';
 import { Marker } from '../marker';
+import { hydrated } from '../environment';
 import { isFunction } from '../utilities/checks';
 import { callHook, Hooks } from '../hooks';
 import { TOGGLE_ATTRIBUTE_PREFIX } from '../constants';
@@ -28,8 +29,16 @@ export const processToggleAttribute = (
 
 		isFunction<boolean>(markerValue)
 			? effect(() => {
-					toggleAttribute(currentNode, attributeName, Boolean(markerValue()));
-					callHook(Hooks.UPDATED, currentNode);
+					const shouldAttributeBePresent = Boolean(markerValue());
+
+					if (hydrated()) {
+						toggleAttribute(
+							currentNode,
+							attributeName,
+							shouldAttributeBePresent,
+						);
+						callHook(Hooks.UPDATED, currentNode);
+					}
 			  })
 			: !currentNode.hasAttribute(attributeName)
 			? toggleAttribute(currentNode, attributeName, Boolean(markerValue))

@@ -1,5 +1,6 @@
 import { Data } from '../reactive/data';
 import { effect } from '../reactive/effect';
+import { hydrated } from '../environment';
 import { Marker } from '../marker';
 import { isFunction } from '../utilities/checks';
 import { callHook, Hooks } from '../hooks';
@@ -27,20 +28,21 @@ export const processRegularAttribute = (
 	);
 
 	effect(() => {
-		currentNode.setAttribute(
-			name.replace(/^regular-/, ''),
-			dynamicMarkers
-				.reduce(
-					(attributeValue, marker) =>
-						attributeValue.replace(
-							marker.toString(),
-							String((marker.value as Data<unknown>)()),
-						),
-					staticPart,
-				)
-				.trim(),
-		);
-		callHook(Hooks.UPDATED, currentNode);
+		const attributeValue = dynamicMarkers
+			.reduce(
+				(attributeValue, marker) =>
+					attributeValue.replace(
+						marker.toString(),
+						String((marker.value as Data<unknown>)()),
+					),
+				staticPart,
+			)
+			.trim();
+
+		if (hydrated()) {
+			currentNode.setAttribute(name.replace(/^regular-/, ''), attributeValue);
+			callHook(Hooks.UPDATED, currentNode);
+		}
 	});
 
 	if (name.startsWith('regular-')) {
