@@ -1,7 +1,7 @@
 import { Data } from '../reactive/data';
 import { effect } from '../reactive/effect';
-import { hydrated } from '../environment';
 import { Marker } from '../marker';
+import { hydrated } from '../environment';
 import { isFunction } from '../utilities/checks';
 import { callHook, Hooks } from '../hooks';
 
@@ -72,7 +72,7 @@ export const processRegularAttributeString = (
 							isFunction<string>(marker.value) ? marker.value() : marker.value,
 						),
 					),
-				values.replace(/['"]/, ''),
+				values.replace(/['"]/g, ''),
 			);
 
 			const dynamicMarkers = attributeMarkers.filter((marker) =>
