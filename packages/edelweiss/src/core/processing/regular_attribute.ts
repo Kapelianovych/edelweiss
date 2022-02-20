@@ -40,18 +40,18 @@ export const processRegularAttribute = (
 			.trim();
 
 		if (hydrated()) {
-			currentNode.setAttribute(name.replace(/^regular-/, ''), attributeValue);
+			currentNode.setAttribute(name.replace(/^__regular-/, ''), attributeValue);
 			callHook(Hooks.UPDATED, currentNode);
 		}
 	});
 
-	if (name.startsWith('regular-')) {
+	if (name.startsWith('__regular-')) {
 		currentNode.removeAttribute(name);
 	}
 };
 
 const regularAttributesWithMarkers =
-	/\s((?:data-)?\w+)=['"]?(\s*(?:[\w-]+\s+)*(?:(?:{{\w+}}\s*)+(?:[\w-]+\s*)*)+)['"]?/g;
+	/\s(\w[\w-]*\w)=((?<optional_quote>['"]?){{\w+}}\k<optional_quote>|(?<quote>['"])[^'"]*{{\w+}}[^'"]*\k<quote>)/g;
 
 export const processRegularAttributeString = (
 	html: string,
@@ -72,7 +72,7 @@ export const processRegularAttributeString = (
 							isFunction<string>(marker.value) ? marker.value() : marker.value,
 						),
 					),
-				values,
+				values.replace(/['"]/, ''),
 			);
 
 			const dynamicMarkers = attributeMarkers.filter((marker) =>
@@ -88,7 +88,7 @@ export const processRegularAttributeString = (
 			return ` ${
 				dynamicMarkers.length > 0
 					? // We should add extra whitespace because of RegExp above.
-					  ` regular-${attribute}="${filledValuesWithoutDynamicPart}"`
+					  ` __regular-${attribute}="${filledValuesWithoutDynamicPart}"`
 					: ''
 			} ${attribute}="${filledValues}"`;
 		},
