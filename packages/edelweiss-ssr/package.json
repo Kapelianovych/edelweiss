@@ -1,6 +1,6 @@
 {
 	"name": "@prostory/edelweiss-ssr",
-	"version": "0.2.3",
+	"version": "0.3.0-next.1",
 	"description": "Environment for server-side rendering of Edelweiss templates.",
 	"type": "module",
 	"main": "./index.js",
@@ -23,15 +23,14 @@
 		"copy:license": "cpy ../../LICENSE build/",
 		"copy:settings": "cpy package.json build/",
 		"prerelease": "npm run build",
-		"release": "npm publish build/ --access public"
+		"release": "npm publish build/ --access public",
+		"prerelease:next": "npm run build",
+		"release:next": "npm publish build/ --access public --tag next"
 	},
 	"keywords": [
-		"Edelweiss",
-		"SSR"
+		"SSR",
+		"Edelweiss"
 	],
 	"author": "Kapelianovych Yevhen",
-	"license": "MIT",
-	"dependencies": {
-		"@happy-dom/global-registrator": "^2.22.0"
-	}
+	"license": "MIT"
 }
