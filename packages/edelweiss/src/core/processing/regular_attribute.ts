@@ -1,6 +1,7 @@
 import { Data } from '../reactive/data';
 import { effect } from '../reactive/effect';
 import { Marker } from '../marker';
+import { sanitize } from '../utilities/sanitizer';
 import { hydrated } from '../environment';
 import { isFunction } from '../utilities/checks';
 import { callHook, Hooks } from '../hooks';
@@ -40,7 +41,10 @@ export const processRegularAttribute = (
 			.trim();
 
 		if (hydrated()) {
-			currentNode.setAttribute(name.replace(/^__regular-/, ''), attributeValue);
+			currentNode.setAttribute(
+				name.replace(/^__regular-/, ''),
+				sanitize(attributeValue),
+			);
 			callHook(Hooks.UPDATED, currentNode);
 		}
 	});
@@ -88,8 +92,10 @@ export const processRegularAttributeString = (
 			return ` ${
 				dynamicMarkers.length > 0
 					? // We should add extra whitespace because of RegExp above.
-					  ` __regular-${attribute}="${filledValuesWithoutDynamicPart}"`
+					  ` __regular-${attribute}="${sanitize(
+							filledValuesWithoutDynamicPart,
+					  )}"`
 					: ''
-			} ${attribute}="${filledValues}"`;
+			} ${attribute}="${sanitize(filledValues)}"`;
 		},
 	);

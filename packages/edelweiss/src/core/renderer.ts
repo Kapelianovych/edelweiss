@@ -1,3 +1,5 @@
+import { sanitize } from './utilities/sanitizer';
+
 export interface CustomDocumentFragment {
 	readonly id: symbol;
 	readonly value: () => string;
@@ -37,7 +39,8 @@ export const renderer = {
 	},
 
 	createText: (value: unknown): string | Text =>
-		globalThis.document?.createTextNode(String(value)) ?? String(value),
+		globalThis.document?.createTextNode(String(value)) ??
+		sanitize(String(value)),
 
 	createDocumentFragment: (): DocumentFragment | CustomDocumentFragment =>
 		globalThis.document?.createDocumentFragment() ?? createDocumentFragment(),
