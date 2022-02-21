@@ -59,7 +59,7 @@ export const processToggleAttributeString = (
 		: marker.value;
 
 	return html.replace(
-		new RegExp(`([\\w-]+)=["']?${key}['"]?`),
+		new RegExp(`\\s(\\w[\\w-]*\\w)=(?<quote>["']?)${key}\\k<quote>`),
 		(_, attribute) =>
 			`${isAttributeDynamic ? `${attribute}="${key}"` : ''} ${
 				shouldAttributeBeIncluded

@@ -5,6 +5,7 @@ import { sanitize } from '../utilities/sanitizer';
 import { hydrated } from '../environment';
 import { isFunction } from '../utilities/checks';
 import { callHook, Hooks } from '../hooks';
+import { REGULAR_ATTRIBUTE_PREFIX } from '../constants';
 
 export const processRegularAttribute = (
 	currentNode: Element,
@@ -42,14 +43,14 @@ export const processRegularAttribute = (
 
 		if (hydrated()) {
 			currentNode.setAttribute(
-				name.replace(/^__regular-/, ''),
+				name.replace(REGULAR_ATTRIBUTE_PREFIX, ''),
 				sanitize(attributeValue),
 			);
 			callHook(Hooks.UPDATED, currentNode);
 		}
 	});
 
-	if (name.startsWith('__regular-')) {
+	if (name.startsWith(REGULAR_ATTRIBUTE_PREFIX)) {
 		currentNode.removeAttribute(name);
 	}
 };
@@ -91,8 +92,8 @@ export const processRegularAttributeString = (
 
 			return ` ${
 				dynamicMarkers.length > 0
-					? // We should add extra whitespace because of RegExp above.
-					  ` __regular-${attribute}="${sanitize(
+					? // We should add extra whitespace because of the RegExp above.
+					  ` ${REGULAR_ATTRIBUTE_PREFIX + attribute}="${sanitize(
 							filledValuesWithoutDynamicPart,
 					  )}"`
 					: ''

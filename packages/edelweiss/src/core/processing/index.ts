@@ -86,6 +86,11 @@ export const fillString = (
 				marker.type === MarkerType.NODE
 					? processNodesString(html, marker)
 					: processToggleAttributeString(html, marker),
-			processRegularAttributeString(nodes, arrayOfMarkers),
+			processRegularAttributeString(
+				nodes,
+				arrayOfMarkers.filter(
+					(marker) => marker.type === MarkerType.REGULAR_ATTRIBUTE,
+				),
+			),
 		);
 };
