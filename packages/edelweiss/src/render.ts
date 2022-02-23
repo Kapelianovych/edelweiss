@@ -1,10 +1,11 @@
-import { Template } from './core/template';
 import { renderer } from './core/renderer';
 import { hydrated } from './core/environment';
-import { fillNodes } from './core/processing';
+import { isFunction } from './core/utilities/checks';
 import { createComment } from './core/utilities/comments';
 import { collect, Fragment } from './core/processing/collect';
+import { MarkerType, Marker } from './core/marker';
 import { isIterable, isObject } from './core/utilities/checks';
+import { fillNodes, fillString } from './core/processing';
 import { callHookOnElementWithChildren, Hooks } from './core/hooks';
 
 interface RenderFunction {
@@ -37,14 +38,19 @@ export const render = ((
 ): void | string => {
 	const nodes = collect(fragment);
 
+	// fillNodes requires this flag be `true` before processing nodes.
+	hydrated(true);
+
 	if (container === undefined) {
 		return nodes instanceof renderer.getDocumentFragment()
-			? convertDocumentFragmentToString(nodes)
-			: String(nodes);
+			? convertDocumentFragmentToString(fillNodes(nodes))
+			: fillString(nodes);
 	}
 
-	container.prepend(nodes);
-	callHookOnElementWithChildren(Hooks.MOUNTED, container as unknown as Node);
+	if (nodes instanceof renderer.getDocumentFragment()) {
+		container.prepend(fillNodes(nodes));
+		callHookOnElementWithChildren(Hooks.MOUNTED, container as unknown as Node);
+	}
 }) as RenderFunction;
 
 /**
@@ -56,14 +62,8 @@ export const render = ((
  *
  * Should be invoked only in browser environment.
  */
-export const hydrate = (fragment: Fragment, startFrom: Node): void => {
-	if (isObject<Template>(fragment) && fragment.isTemplate) {
-		fillNodes(startFrom, fragment.markers);
-	} else if (isIterable(fragment)) {
-		Array.from(fragment).forEach((fragmentPart) =>
-			hydrate(fragmentPart, startFrom),
-		);
-	}
+export const hydrate = (startFrom: Node): void => {
+	fillNodes(startFrom);
 
 	hydrated(true);
 };

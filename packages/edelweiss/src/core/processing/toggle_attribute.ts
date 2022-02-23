@@ -1,6 +1,7 @@
 import { effect } from '../reactive/effect';
 import { Marker } from '../marker';
 import { hydrated } from '../environment';
+import { Computed } from '../reactive/global';
 import { isFunction } from '../utilities/checks';
 import { callHook, Hooks } from '../hooks';
 import { TOGGLE_ATTRIBUTE_PREFIX } from '../constants';
@@ -27,22 +28,16 @@ export const processToggleAttribute = (
 
 		const { value: markerValue } = toggleMarker;
 
-		isFunction<boolean>(markerValue)
-			? effect(() => {
-					const shouldAttributeBePresent = Boolean(markerValue());
+		effect(() => {
+			const shouldAttributeBePresent = Boolean(
+				(markerValue as Computed<unknown>)(),
+			);
 
-					if (hydrated()) {
-						toggleAttribute(
-							currentNode,
-							attributeName,
-							shouldAttributeBePresent,
-						);
-						callHook(Hooks.UPDATED, currentNode);
-					}
-			  })
-			: !currentNode.hasAttribute(attributeName)
-			? toggleAttribute(currentNode, attributeName, Boolean(markerValue))
-			: null;
+			if (hydrated()) {
+				toggleAttribute(currentNode, attributeName, shouldAttributeBePresent);
+				callHook(Hooks.UPDATED, currentNode);
+			}
+		});
 
 		currentNode.removeAttribute(name);
 	}
@@ -51,20 +46,15 @@ export const processToggleAttribute = (
 export const processToggleAttributeString = (
 	html: string,
 	marker: Marker,
-): string => {
-	const key = marker.toString();
-	const isAttributeDynamic = isFunction(marker.value);
-	const shouldAttributeBeIncluded = isAttributeDynamic
-		? (marker.value as Function)()
-		: marker.value;
-
-	return html.replace(
-		new RegExp(`\\s(\\w[\\w-]*\\w)=(?<quote>["']?)${key}\\k<quote>`),
+): string =>
+	html.replace(
+		new RegExp(
+			`\\s(\\w[\\w-]*\\w)=(?<quote>["']?)${marker.toString()}\\k<quote>`,
+		),
 		(_, attribute) =>
-			`${isAttributeDynamic ? `${attribute}="${key}"` : ''} ${
-				shouldAttributeBeIncluded
+			` ${attribute}="${marker.toString()}" ${
+				Boolean((marker.value as Computed<unknown>)())
 					? attribute.replace(TOGGLE_ATTRIBUTE_PREFIX, '')
 					: ''
 			}`,
 	);
-};

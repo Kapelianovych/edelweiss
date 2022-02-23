@@ -1,3 +1,4 @@
+import { markers } from '../html';
 import { isComment } from '../utilities/node_type';
 import { processHook } from './hook';
 import { processProperty } from './property';
@@ -43,7 +44,7 @@ const findAttributeHandler = (name: string) =>
  *     Here bridges are established.
  *  3. Removing marker and relative unneeded stuff (special attributes).
  */
-export const fillNodes = (nodes: Node, markers: Map<string, Marker>): Node => {
+export const fillNodes = <T extends Node>(nodes: T): T => {
 	const walker = document.createTreeWalker(
 		nodes,
 		NodeFilter.SHOW_ELEMENT + NodeFilter.SHOW_COMMENT,
@@ -69,10 +70,7 @@ export const fillNodes = (nodes: Node, markers: Map<string, Marker>): Node => {
 	return nodes;
 };
 
-export const fillString = (
-	nodes: string,
-	markers: Map<string, Marker>,
-): string => {
+export const fillString = (nodes: string): string => {
 	const arrayOfMarkers = Array.from(markers.values());
 
 	return arrayOfMarkers

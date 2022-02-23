@@ -1,5 +1,5 @@
 import { data } from './core/reactive/data';
-import { html } from './html';
+import { html } from './core/html';
 import { Computed } from './core/reactive/global';
 import { Fragment } from './core/processing/collect';
 import { CustomHTMLElement } from './custom_html_element';

@@ -1,5 +1,6 @@
-import { Template } from '../template';
-import { isIterable, isObject } from '../utilities/checks';
+import { isServer } from '../environment';
+import { isIterable } from '../utilities/checks';
+import { Template, isTemplate } from '../html';
 import { CustomDocumentFragment, renderer } from '../renderer';
 
 /**
@@ -22,8 +23,8 @@ const toFragment = (
 ): DocumentFragment | CustomDocumentFragment => {
 	const fragment = renderer.createDocumentFragment();
 
-	if (isObject<Template>(value) && value.isTemplate) {
-		fragment.append(value.build());
+	if (isTemplate(value)) {
+		fragment.append(isServer() ? value.html : renderer.parse(value.html));
 		// We need to check for the HTMLTemplateElement before
 		// the Element, because the former is child of the latter.
 	} else if (value instanceof renderer.getHTMLTemplateElement()) {

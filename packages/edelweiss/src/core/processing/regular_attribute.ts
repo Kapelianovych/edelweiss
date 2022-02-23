@@ -17,34 +17,22 @@ export const processRegularAttribute = (
 		value.includes(marker.toString()),
 	);
 
-	const staticPart = attributeMarkers.reduce(
-		(part, marker) =>
-			isFunction<string>(marker.value)
-				? part
-				: part.replace(marker.toString(), String(marker.value)),
-		value,
-	);
-
-	const dynamicMarkers = attributeMarkers.filter((marker) =>
-		isFunction<string>(marker.value),
-	);
-
 	effect(() => {
-		const attributeValue = dynamicMarkers
+		const attributeValue = attributeMarkers
 			.reduce(
 				(attributeValue, marker) =>
 					attributeValue.replace(
 						marker.toString(),
-						String((marker.value as Data<unknown>)()),
+						sanitize(String((marker.value as Data<unknown>)())),
 					),
-				staticPart,
+				value,
 			)
 			.trim();
 
 		if (hydrated()) {
 			currentNode.setAttribute(
 				name.replace(REGULAR_ATTRIBUTE_PREFIX, ''),
-				sanitize(attributeValue),
+				attributeValue,
 			);
 			callHook(Hooks.UPDATED, currentNode);
 		}
@@ -73,30 +61,25 @@ export const processRegularAttributeString = (
 				(part, marker) =>
 					part.replace(
 						marker.toString(),
-						String(
-							isFunction<string>(marker.value) ? marker.value() : marker.value,
+						sanitize(
+							String(
+								isFunction<string>(marker.value)
+									? marker.value()
+									: marker.value,
+							),
 						),
 					),
 				values.replace(/['"]/g, ''),
 			);
 
-			const dynamicMarkers = attributeMarkers.filter((marker) =>
-				isFunction<string>(marker.value),
-			);
-
-			const filledValuesWithoutDynamicPart = dynamicMarkers.reduce(
-				(part, marker) =>
-					part.replace((marker.value as Function)(), marker.toString()),
-				filledValues,
-			);
-
 			return ` ${
-				dynamicMarkers.length > 0
+				attributeMarkers.length > 0
 					? // We should add extra whitespace because of the RegExp above.
-					  ` ${REGULAR_ATTRIBUTE_PREFIX + attribute}="${sanitize(
-							filledValuesWithoutDynamicPart,
+					  ` ${REGULAR_ATTRIBUTE_PREFIX + attribute}="${values.replace(
+							/['"]/g,
+							'',
 					  )}"`
 					: ''
-			} ${attribute}="${sanitize(filledValues)}"`;
+			} ${attribute}="${filledValues}"`;
 		},
 	);
