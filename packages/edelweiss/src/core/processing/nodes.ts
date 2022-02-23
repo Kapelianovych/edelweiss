@@ -54,6 +54,7 @@ const replaceCommentWithStaticNode = (
 export const processNodes = (
 	currentNode: Comment,
 	markers: Map<string, Marker>,
+	fillNodes: <T extends Node>(node: T) => T,
 ): void => {
 	const nodeMarker = markers.get(
 		closedCommentWith(currentNode.textContent ?? ''),
@@ -62,19 +63,21 @@ export const processNodes = (
 	if (nodeMarker !== undefined) {
 		const { value } = nodeMarker;
 
-		isFunction<Fragment>(value)
-			? effect(() => {
-					const nodes = value();
+		if (isFunction<Fragment>(value)) {
+			effect(() => {
+				const nodes = value();
 
-					if (hydrated()) {
-						unmountOldNodes(currentNode);
-						currentNode.after(collect(nodes));
-						callMountedHook(currentNode);
-					}
-			  })
-			: isClosedCommentEmpty(currentNode)
-			? replaceCommentWithStaticNode(currentNode, collect(value))
-			: null;
+				if (hydrated()) {
+					unmountOldNodes(currentNode);
+					currentNode.after(fillNodes(collect(nodes) as DocumentFragment));
+					callMountedHook(currentNode);
+				}
+			});
+		} else {
+			isClosedCommentEmpty(currentNode)
+				? replaceCommentWithStaticNode(currentNode, collect(value))
+				: null;
+		}
 	}
 };
 

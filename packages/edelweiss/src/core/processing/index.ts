@@ -52,7 +52,7 @@ export const fillNodes = <T extends Node>(nodes: T): T => {
 
 	while (walker.nextNode() !== null) {
 		isComment(walker.currentNode)
-			? processNodes(walker.currentNode, markers)
+			? processNodes(walker.currentNode, markers, fillNodes)
 			: Array.from((walker.currentNode as Element).attributes).forEach(
 					({ name, value }) =>
 						findAttributeHandler(name)(
