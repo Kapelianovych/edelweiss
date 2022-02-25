@@ -50,6 +50,12 @@ interface Properties {
  */
 export abstract class CustomHTMLElement extends renderer.getHTMLElement() {
 	/**
+	 * Contains a markup name of the element.
+	 * Should be provided with template method.
+	 */
+	static readonly tagName: string;
+
+	/**
 	 * Returns an array of attribute names to monitor for changes.
 	 * For declared attributes same reactive properties will be created.
 	 * Default value of new properties is empty string.
@@ -117,3 +123,18 @@ export abstract class CustomHTMLElement extends renderer.getHTMLElement() {
 	/** Defines inner DOM of custom element as Shadow DOM. */
 	protected abstract template(): Fragment;
 }
+
+/**
+ * Registers `elementClass` in global custom element registry.
+ * Allowed to use in server environment.
+ */
+export const registerElement = <T extends typeof CustomHTMLElement>(
+	elementClass: T,
+): void => {
+	if (globalThis.customElements?.get(elementClass.tagName) === undefined) {
+		globalThis.customElements?.define(
+			elementClass.tagName,
+			elementClass as unknown as CustomElementConstructor,
+		);
+	}
+};

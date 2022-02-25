@@ -127,17 +127,21 @@ Library contains `CustomHTMLElement` class for easy creating [custom elements](h
 
 ```ts
 class MyCustomElement extends CustomHTMLElement {
+	static readonly tagName = 'my-custom';
+
 	template(): Fragment {
 		return html`<p>It is a custom element</p>`;
 	}
 }
 // then register it
-customElements.define('my-custom', MyCustomElement);
+registerElement(MyCustomElement);
 ```
 
 That's it 👐!
 
 The main method you should provide - `template`. It should return HTML that will be attached to [ShadowDOM (opened)](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM).
+
+Also, every custom element should contain the `tagName` property.
 
 For communicating with outer world you can define reactive properties. This is _camelCased_ representation of declared `observedAttributes` getter.
 

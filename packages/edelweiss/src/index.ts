@@ -8,7 +8,11 @@ export { render, hydrate } from './render';
 export { data, type Data } from './core/reactive/data';
 export { html, type Template } from './core/html';
 export { lazy, type Resource } from './lazy';
-export { CustomHTMLElement, type Property } from './custom_html_element';
+export {
+	registerElement,
+	CustomHTMLElement,
+	type Property,
+} from './custom_html_element';
 export {
 	language,
 	languages,

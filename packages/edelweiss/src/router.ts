@@ -2,7 +2,7 @@ import { data } from './core/reactive/data';
 import { html } from './core/html';
 import { Computed } from './core/reactive/global';
 import { Fragment } from './core/processing/collect';
-import { CustomHTMLElement } from './custom_html_element';
+import { CustomHTMLElement, registerElement } from './custom_html_element';
 
 /**
  * RegExp that match against string and take
@@ -111,6 +111,4 @@ export class RouteLinkElement extends CustomHTMLElement {
 	}
 }
 
-if (globalThis.customElements?.get(RouteLinkElement.tagName) === undefined) {
-	globalThis.customElements?.define(RouteLinkElement.tagName, RouteLinkElement);
-}
+registerElement(RouteLinkElement);
