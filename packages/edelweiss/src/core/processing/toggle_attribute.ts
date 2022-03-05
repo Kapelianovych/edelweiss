@@ -2,7 +2,6 @@ import { effect } from '../reactive/effect';
 import { Marker } from '../marker';
 import { hydrated } from '../environment';
 import { Computed } from '../reactive/global';
-import { isFunction } from '../utilities/checks';
 import { callHook, Hooks } from '../hooks';
 import { TOGGLE_ATTRIBUTE_PREFIX } from '../constants';
 

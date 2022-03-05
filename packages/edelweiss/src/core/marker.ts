@@ -23,13 +23,15 @@ export enum MarkerType {
 	PROPERTY_ATTRIBUTE = 'property',
 }
 
-const getMarkerTypeFrom = (attributeSymbol: string): MarkerType =>
-	({
-		[HOOK_SYMBOL]: MarkerType.HOOK_ATTRIBUTE,
-		[EVENT_SYMBOL]: MarkerType.EVENT_ATTRIBUTE,
-		[TOGGLE_SYMBOL]: MarkerType.TOGGLE_ATTRIBUTE,
-		[PROPERTY_SYMBOL]: MarkerType.PROPERTY_ATTRIBUTE,
-	}[attributeSymbol] ?? MarkerType.REGULAR_ATTRIBUTE);
+const markersMap: Record<string, MarkerType> = {
+	[HOOK_SYMBOL]: MarkerType.HOOK_ATTRIBUTE,
+	[EVENT_SYMBOL]: MarkerType.EVENT_ATTRIBUTE,
+	[TOGGLE_SYMBOL]: MarkerType.TOGGLE_ATTRIBUTE,
+	[PROPERTY_SYMBOL]: MarkerType.PROPERTY_ATTRIBUTE,
+};
+
+const getMarkerAttributeType = (attributeSymbol: string): MarkerType =>
+	markersMap[attributeSymbol] ?? MarkerType.REGULAR_ATTRIBUTE;
 
 export const createMarker = (
 	previousHTML: string,
@@ -42,7 +44,7 @@ export const createMarker = (
 		value,
 		type:
 			attributeSymbol !== undefined
-				? getMarkerTypeFrom(attributeSymbol)
+				? getMarkerAttributeType(attributeSymbol)
 				: MarkerType.NODE,
 		toString: () =>
 			attributeSymbol === undefined

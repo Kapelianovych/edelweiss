@@ -1,10 +1,7 @@
 import { renderer } from './core/renderer';
 import { hydrated } from './core/environment';
-import { isFunction } from './core/utilities/checks';
 import { createComment } from './core/utilities/comments';
 import { collect, Fragment } from './core/processing/collect';
-import { MarkerType, Marker } from './core/marker';
-import { isIterable, isObject } from './core/utilities/checks';
 import { fillNodes, fillString } from './core/processing';
 import { callHookOnElementWithChildren, Hooks } from './core/hooks';
 
