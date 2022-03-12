@@ -506,6 +506,37 @@ Also there is a `<route-link>` custom element that does navigation as `current` 
 const template = html`<route-link href="/">Home</route-link>`;
 ```
 
+### Meta
+
+In order to render tags in the `<head>` node use `meta` function.
+
+```ts
+interface MetaRecord {
+	// The same syntax as the `pattern` property of `Route` interface
+	readonly route: string;
+	readonly template: Fragment;
+}
+
+function meta(...templates: readonly MetaRecord[]): Computed<Fragment>;
+```
+
+If you implement CSR, then you should pass function returned by the `meta` function to `render`.
+
+```ts
+const Head = meta(/* ... */);
+
+render(html`${Head}`, document.head);
+```
+
+Otherwise, omit the second parameter of the `render` function.
+
+```ts
+const Head = meta(/* ... */);
+
+const headHTML = render(html`${Head}`);
+// and then include it in the HTML layout
+```
+
 ### Internationalization
 
 For supporting different languages on site, Edelweiss suggests a `i18n` module.

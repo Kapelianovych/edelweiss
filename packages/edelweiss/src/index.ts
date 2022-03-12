@@ -8,6 +8,7 @@ export { render, hydrate } from './render';
 export { data, type Data } from './core/reactive/data';
 export { html, type Template } from './core/html';
 export { lazy, type Resource } from './lazy';
+export { meta, type MetaRecord } from './meta';
 export {
 	registerElement,
 	CustomHTMLElement,

@@ -1,4 +1,4 @@
-import { Marker } from '../marker';
+import { markers } from '../html';
 import { HOOK_ATTRIBUTE_PREFIX } from '../constants';
 import { Hooks, registerHook, Hook } from '../hooks';
 
@@ -6,7 +6,6 @@ export const processHook = (
 	node: Element,
 	attributeName: string,
 	attributeValue: string,
-	markers: Map<string, Marker>,
 ): void => {
 	const hookMarker = markers.get(attributeValue);
 

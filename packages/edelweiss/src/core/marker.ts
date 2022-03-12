@@ -1,11 +1,6 @@
 import { hash } from './utilities/hash';
+import { HTML_SYMBOL } from './constants';
 import { closedCommentWith } from './utilities/comments';
-import {
-	HOOK_SYMBOL,
-	EVENT_SYMBOL,
-	TOGGLE_SYMBOL,
-	PROPERTY_SYMBOL,
-} from './constants';
 
 /** Base class for markers. */
 export interface Marker {
@@ -24,10 +19,10 @@ export enum MarkerType {
 }
 
 const markersMap: Record<string, MarkerType> = {
-	[HOOK_SYMBOL]: MarkerType.HOOK_ATTRIBUTE,
-	[EVENT_SYMBOL]: MarkerType.EVENT_ATTRIBUTE,
-	[TOGGLE_SYMBOL]: MarkerType.TOGGLE_ATTRIBUTE,
-	[PROPERTY_SYMBOL]: MarkerType.PROPERTY_ATTRIBUTE,
+	[HTML_SYMBOL.HOOK]: MarkerType.HOOK_ATTRIBUTE,
+	[HTML_SYMBOL.EVENT]: MarkerType.EVENT_ATTRIBUTE,
+	[HTML_SYMBOL.TOGGLE]: MarkerType.TOGGLE_ATTRIBUTE,
+	[HTML_SYMBOL.PROPERTY]: MarkerType.PROPERTY_ATTRIBUTE,
 };
 
 const getMarkerAttributeType = (attributeSymbol: string): MarkerType =>
@@ -36,7 +31,7 @@ const getMarkerAttributeType = (attributeSymbol: string): MarkerType =>
 export const createMarker = (
 	previousHTML: string,
 	value: unknown,
-	attributeSymbol?: string,
+	attributeSymbol?: HTML_SYMBOL,
 ): Marker => {
 	const id = hash(previousHTML);
 

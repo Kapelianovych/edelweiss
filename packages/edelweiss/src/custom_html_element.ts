@@ -1,5 +1,4 @@
 import { render } from './render';
-import { renderer } from './core/renderer';
 import { Fragment } from './core/processing/collect';
 import { data, Data } from './core/reactive/data';
 
@@ -44,11 +43,13 @@ interface Properties {
 	[name: string]: Property;
 }
 
+const HTMLElementClass = globalThis?.HTMLElement ?? class {};
+
 /**
  * Parent class for custom elements.
  * At least `processing` method need to be defined.
  */
-export abstract class CustomHTMLElement extends renderer.getHTMLElement() {
+export abstract class CustomHTMLElement extends HTMLElementClass {
 	/**
 	 * Contains a markup name of the element.
 	 * Should be provided with template method.

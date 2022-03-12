@@ -1,24 +1,13 @@
-import { renderer } from './core/renderer';
 import { hydrated } from './core/environment';
-import { createComment } from './core/utilities/comments';
+import { fillNodes } from './core/processing';
+import { removeStaticComments } from './core/processing/nodes';
 import { collect, Fragment } from './core/processing/collect';
-import { fillNodes, fillString } from './core/processing';
 import { callHookOnElementWithChildren, Hooks } from './core/hooks';
 
 interface RenderFunction {
 	(fragment: Fragment): string;
 	(fragment: Fragment, container: ParentNode): void;
 }
-
-const convertDocumentFragmentToString = (fragment: DocumentFragment): string =>
-	Array.from(fragment.childNodes).reduce(
-		(part, node) =>
-			part +
-			(node instanceof renderer.getComment()
-				? createComment(node.textContent ?? '')
-				: (node as Element).outerHTML ?? node.textContent ?? ''),
-		'',
-	);
 
 /**
  * Attaches processing to container in DOM.
@@ -39,15 +28,15 @@ export const render = ((
 	hydrated(true);
 
 	if (container === undefined) {
-		return nodes instanceof renderer.getDocumentFragment()
-			? convertDocumentFragmentToString(fillNodes(nodes))
-			: fillString(nodes);
+		return String(nodes);
 	}
 
-	if (nodes instanceof renderer.getDocumentFragment()) {
-		container.prepend(fillNodes(nodes));
-		callHookOnElementWithChildren(Hooks.MOUNTED, container as unknown as Node);
-	}
+	const filledNodes = fillNodes(nodes as Node);
+
+	removeStaticComments();
+
+	container.prepend(filledNodes);
+	callHookOnElementWithChildren(Hooks.MOUNTED, container);
 }) as RenderFunction;
 
 /**
@@ -61,6 +50,8 @@ export const render = ((
  */
 export const hydrate = (startFrom: Node): void => {
 	fillNodes(startFrom);
+
+	removeStaticComments();
 
 	hydrated(true);
 };

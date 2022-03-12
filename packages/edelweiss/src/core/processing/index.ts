@@ -1,18 +1,10 @@
-import { markers } from '../html';
 import { isComment } from '../utilities/node_type';
 import { processHook } from './hook';
+import { processNodes } from './nodes';
 import { processProperty } from './property';
-import { Marker, MarkerType } from '../marker';
 import { processEventListener } from './event_attribute';
-import { commentsToRemove, processNodes, processNodesString } from './nodes';
-import {
-	processToggleAttribute,
-	processToggleAttributeString,
-} from './toggle_attribute';
-import {
-	processRegularAttribute,
-	processRegularAttributeString,
-} from './regular_attribute';
+import { processToggleAttribute } from './toggle_attribute';
+import { processRegularAttribute } from './regular_attribute';
 import {
 	HOOK_ATTRIBUTE_PREFIX,
 	EVENT_ATTRIBUTE_PREFIX,
@@ -52,43 +44,16 @@ export const fillNodes = <T extends Node>(nodes: T): T => {
 
 	while (walker.nextNode() !== null) {
 		isComment(walker.currentNode)
-			? processNodes(walker.currentNode, markers, fillNodes)
+			? processNodes(walker.currentNode, fillNodes)
 			: Array.from((walker.currentNode as Element).attributes).forEach(
 					({ name, value }) =>
 						findAttributeHandler(name)(
 							walker.currentNode as Element,
 							name,
 							value,
-							markers,
 						),
 			  );
 	}
 
-	commentsToRemove.forEach((comment) => comment.remove());
-	commentsToRemove.clear();
-
 	return nodes;
-};
-
-export const fillString = (nodes: string): string => {
-	const arrayOfMarkers = Array.from(markers.values());
-
-	return arrayOfMarkers
-		.filter(
-			(marker) =>
-				marker.type === MarkerType.NODE ||
-				marker.type === MarkerType.TOGGLE_ATTRIBUTE,
-		)
-		.reduce(
-			(html, marker) =>
-				marker.type === MarkerType.NODE
-					? processNodesString(html, marker)
-					: processToggleAttributeString(html, marker),
-			processRegularAttributeString(
-				nodes,
-				arrayOfMarkers.filter(
-					(marker) => marker.type === MarkerType.REGULAR_ATTRIBUTE,
-				),
-			),
-		);
 };

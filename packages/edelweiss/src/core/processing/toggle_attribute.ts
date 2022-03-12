@@ -1,7 +1,6 @@
 import { effect } from '../reactive/effect';
-import { Marker } from '../marker';
+import { markers } from '../html';
 import { hydrated } from '../environment';
-import { Computed } from '../reactive/global';
 import { callHook, Hooks } from '../hooks';
 import { TOGGLE_ATTRIBUTE_PREFIX } from '../constants';
 
@@ -18,19 +17,16 @@ export const processToggleAttribute = (
 	currentNode: Element,
 	name: string,
 	value: string,
-	markers: Map<string, Marker>,
 ): void => {
-	const toggleMarker = markers.get(value);
+	const marker = markers.get(value);
 
-	if (toggleMarker !== undefined) {
+	if (marker !== undefined) {
 		const attributeName = name.replace(TOGGLE_ATTRIBUTE_PREFIX, '');
 
-		const { value: markerValue } = toggleMarker;
+		const { value } = marker;
 
 		effect(() => {
-			const shouldAttributeBePresent = Boolean(
-				(markerValue as Computed<unknown>)(),
-			);
+			const shouldAttributeBePresent = Boolean((value as Function)());
 
 			if (hydrated()) {
 				toggleAttribute(currentNode, attributeName, shouldAttributeBePresent);
@@ -41,19 +37,3 @@ export const processToggleAttribute = (
 		currentNode.removeAttribute(name);
 	}
 };
-
-export const processToggleAttributeString = (
-	html: string,
-	marker: Marker,
-): string =>
-	html.replace(
-		new RegExp(
-			`\\s(\\w[\\w-]*\\w)=(?<quote>["']?)${marker.toString()}\\k<quote>`,
-		),
-		(_, attribute) =>
-			` ${attribute}="${marker.toString()}" ${
-				Boolean((marker.value as Computed<unknown>)())
-					? attribute.replace(TOGGLE_ATTRIBUTE_PREFIX, '')
-					: ''
-			}`,
-	);

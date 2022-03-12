@@ -1,7 +1,7 @@
 import { isServer } from '../environment';
+import { sanitize } from '../utilities/sanitizer';
 import { isIterable } from '../utilities/checks';
 import { Template, isTemplate } from '../html';
-import { CustomDocumentFragment, renderer } from '../renderer';
 
 /**
  * Describe values that can be inserted into processing
@@ -18,43 +18,40 @@ export type Fragment =
 	| DocumentFragment
 	| Iterable<string | Element | Template | DocumentFragment>;
 
-const toFragment = (
-	value: unknown,
-): DocumentFragment | CustomDocumentFragment => {
-	const fragment = renderer.createDocumentFragment();
-
-	if (isTemplate(value)) {
-		fragment.append(isServer() ? value.html : renderer.parse(value.html));
-		// We need to check for the HTMLTemplateElement before
-		// the Element, because the former is child of the latter.
-	} else if (value instanceof renderer.getHTMLTemplateElement()) {
-		fragment.append((value as HTMLTemplateElement).content);
-	} else if (
-		value instanceof renderer.getElement() ||
-		value instanceof renderer.getDocumentFragment()
-	) {
-		fragment.append(value);
+const toFragment = (value: unknown): string | Node => {
+	if (isServer()) {
+		return isTemplate(value) ? value.html : sanitize(String(value));
 	} else {
-		// Users can provide value of type other than `string`.
-		// In that case value must be explicitly converted to `string`.
-		fragment.append(renderer.createText(value));
+		if (isTemplate(value)) {
+			const template = globalThis.document.createElement('template');
+			template.innerHTML = value.html;
+			return template.content;
+		} else if (value instanceof globalThis.HTMLTemplateElement) {
+			return value.content;
+		} else if (
+			value instanceof globalThis.Element ||
+			value instanceof globalThis.DocumentFragment
+		) {
+			return value;
+		} else {
+			return globalThis.document.createTextNode(String(value));
+		}
 	}
-
-	return fragment;
 };
 
 /** Collects all nodes into one fragment. */
-export const collect = (value: unknown): DocumentFragment | string => {
-	const fragment = isIterable(value)
+export const collect = (value: unknown): Node | string =>
+	isIterable(value)
 		? Array.from(value)
 				.map(toFragment)
-				.reduce((all: CustomDocumentFragment | DocumentFragment, current) => {
-					all.append(current as DocumentFragment);
-					return all;
-				}, renderer.createDocumentFragment())
-		: toFragment(value);
+				.reduce(
+					(all: string | DocumentFragment, current) => {
+						if (!isServer()) {
+							(all as DocumentFragment).append(current);
+						}
 
-	return fragment instanceof renderer.getDocumentFragment()
-		? fragment
-		: fragment.value();
-};
+						return isServer() ? (all as string) + current : all;
+					},
+					isServer() ? '' : globalThis.document.createDocumentFragment(),
+				)
+		: toFragment(value);

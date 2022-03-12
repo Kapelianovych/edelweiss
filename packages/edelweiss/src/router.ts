@@ -2,18 +2,8 @@ import { data } from './core/reactive/data';
 import { html } from './core/html';
 import { Computed } from './core/reactive/global';
 import { Fragment } from './core/processing/collect';
+import { patternToRegExp } from './core/utilities/pattern';
 import { CustomHTMLElement, registerElement } from './custom_html_element';
-
-/**
- * RegExp that match against string and take
- * inner part of path without `^` and `$`.
- * Needed for situations when user can provide
- * `^` or `$`, but not both at the same time.
- */
-const START_END_REGEXP = /^\^*?([^$^]+)\$*?$/;
-
-const patternToRegExp = (pattern: string): RegExp =>
-	new RegExp(pattern.replace(START_END_REGEXP, '^$1$'));
 
 /** Shape of a route. */
 export interface Route {

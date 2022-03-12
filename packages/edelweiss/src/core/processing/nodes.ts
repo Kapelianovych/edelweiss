@@ -1,5 +1,5 @@
 import { effect } from '../reactive/effect';
-import { Marker } from '../marker';
+import { markers } from '../html';
 import { hydrated } from '../environment';
 import { isFunction } from '../utilities/checks';
 import { collect, Fragment } from './collect';
@@ -7,7 +7,6 @@ import { callHookOnElementWithChildren, Hooks } from '../hooks';
 import {
 	closedCommentWith,
 	isNodeClosedCommentFor,
-	insertBetweenClosedComment,
 } from '../utilities/comments';
 
 const unmountOldNodes = (fromComment: Comment) => {
@@ -38,22 +37,24 @@ const isClosedCommentEmpty = (comment: Comment): boolean =>
 	comment.nextSibling !== null &&
 	isNodeClosedCommentFor(comment, comment.nextSibling);
 
-export const commentsToRemove = new Set<Comment>();
+const commentsToRemove = new Set<Comment>();
 
-const replaceCommentWithStaticNode = (
+export const removeStaticComments = () => {
+	commentsToRemove.forEach((comment) => comment.remove());
+	commentsToRemove.clear();
+};
+
+const replaceCommentsWithStaticNode = (
 	comment: Comment,
 	withNode: Node | string,
 ): void => {
-	// We can safely remove next node and
-	// walker won't stumble.
-	comment.nextSibling?.remove();
-	comment.after(withNode);
 	commentsToRemove.add(comment);
+	commentsToRemove.add(comment.nextSibling as Comment);
+	comment.after(withNode);
 };
 
 export const processNodes = (
 	currentNode: Comment,
-	markers: Map<string, Marker>,
 	fillNodes: <T extends Node>(node: T) => T,
 ): void => {
 	const nodeMarker = markers.get(
@@ -75,19 +76,8 @@ export const processNodes = (
 			});
 		} else {
 			isClosedCommentEmpty(currentNode)
-				? replaceCommentWithStaticNode(currentNode, collect(value))
+				? replaceCommentsWithStaticNode(currentNode, collect(value))
 				: null;
 		}
 	}
-};
-
-export const processNodesString = (html: string, marker: Marker): string => {
-	const nodesToInsert = isFunction<unknown>(marker.value)
-		? insertBetweenClosedComment(
-				marker.toString(),
-				collect(marker.value()) as string,
-		  )
-		: (collect(marker.value) as string);
-
-	return html.replace(marker.toString(), nodesToInsert);
 };

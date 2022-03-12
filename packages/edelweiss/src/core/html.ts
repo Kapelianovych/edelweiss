@@ -1,14 +1,13 @@
 import { sanitize } from './utilities/sanitizer';
-import { isObject, isFunction } from './utilities/checks';
-import { createMarker, Marker } from './marker';
+import { insertBetweenClosedComment } from './utilities/comments';
+import { createMarker, Marker, MarkerType } from './marker';
+import { isObject, isFunction, isIterable } from './utilities/checks';
 import {
-	HOOK_SYMBOL,
-	EVENT_SYMBOL,
-	TOGGLE_SYMBOL,
-	PROPERTY_SYMBOL,
+	HTML_SYMBOL,
 	HOOK_ATTRIBUTE_PREFIX,
 	EVENT_ATTRIBUTE_PREFIX,
 	TOGGLE_ATTRIBUTE_PREFIX,
+	REGULAR_ATTRIBUTE_PREFIX,
 	PROPERTY_ATTRIBUTE_PREFIX,
 } from './constants';
 
@@ -20,11 +19,16 @@ import {
 const PRECEDING_ATTRIBUTE_REGEXP =
 	/(\S+)=["']?((?:.(?!["']?\s+\S+=|\s*\/?[>"']))+.)?$/;
 
+const regularAttributesWithMarkers =
+	/\s(\w[\w-]*\w)=((?<optional_quote>['"]?){{\w+}}\k<optional_quote>|(?<quote>['"])[^'"]*{{\w+}}[^'"]*\k<quote>)/g;
+
+const TO_REMOVE_ATTRIBUTE = 'data-to-remove';
+
 const SPECIAL_SYMBOLS = {
-	[HOOK_SYMBOL]: HOOK_ATTRIBUTE_PREFIX,
-	[EVENT_SYMBOL]: EVENT_ATTRIBUTE_PREFIX,
-	[TOGGLE_SYMBOL]: TOGGLE_ATTRIBUTE_PREFIX,
-	[PROPERTY_SYMBOL]: PROPERTY_ATTRIBUTE_PREFIX,
+	[HTML_SYMBOL.HOOK]: HOOK_ATTRIBUTE_PREFIX,
+	[HTML_SYMBOL.EVENT]: EVENT_ATTRIBUTE_PREFIX,
+	[HTML_SYMBOL.TOGGLE]: TOGGLE_ATTRIBUTE_PREFIX,
+	[HTML_SYMBOL.PROPERTY]: PROPERTY_ATTRIBUTE_PREFIX,
 };
 
 const templateId: unique symbol = Symbol();
@@ -39,19 +43,98 @@ export interface Template {
 export const isTemplate = (value: unknown): value is Template =>
 	isObject(value) && templateId in value;
 
+const buildStaticText = (value: unknown): string => sanitize(String(value));
+
+const buildStaticTemplate = (value: Template): string => value.html;
+
+const buildStaticFragments = (value: unknown): string =>
+	isTemplate(value)
+		? buildStaticTemplate(value)
+		: !isFunction(value) && !isObject(value)
+		? buildStaticText(value)
+		: '';
+
+const buildStaticHTML = (previousTemplate: string, value: unknown): string => {
+	if (isFunction(value)) {
+		const marker = createMarker(previousTemplate, value);
+
+		markers.set(marker.toString(), marker);
+
+		const staticHTML = buildStaticFragments(value());
+
+		return (
+			previousTemplate +
+			insertBetweenClosedComment(marker.toString(), staticHTML)
+		);
+	}
+
+	let staticHTML = buildStaticFragments(value);
+
+	if (staticHTML === '') {
+		const marker = createMarker(previousTemplate, value);
+
+		markers.set(marker.toString(), marker);
+
+		staticHTML = marker.toString();
+	}
+
+	return previousTemplate + staticHTML;
+};
+
+const buildStaticRegularAttribute = (
+	previousTemplate: string,
+	value: unknown,
+): string => {
+	if (isFunction(value)) {
+		const marker = createMarker(previousTemplate, value, HTML_SYMBOL.REST);
+
+		markers.set(marker.toString(), marker);
+
+		return previousTemplate + marker.toString();
+	}
+
+	return previousTemplate + sanitize(String(value));
+};
+
+const buildStaticToggleAttribute = (
+	previousTemplate: string,
+	attribute: string,
+	value: unknown,
+): string => {
+	if (isFunction(value)) {
+		const marker = createMarker(previousTemplate, value, HTML_SYMBOL.TOGGLE);
+
+		markers.set(marker.toString(), marker);
+
+		return (
+			previousTemplate.replace(
+				attribute,
+				`${TOGGLE_ATTRIBUTE_PREFIX}${attribute.slice(
+					1,
+				)}="${marker.toString()}" ${
+					Boolean(value) ? attribute.slice(1) : TO_REMOVE_ATTRIBUTE
+				}`,
+			) +
+			// We should add quotes if there aren't any to prevent
+			// catching other attributes as values.
+			(/['"]$/.test(previousTemplate) ? '' : '""')
+		);
+	}
+
+	return previousTemplate.replace(
+		attribute,
+		Boolean(value) ? attribute.slice(1) : TO_REMOVE_ATTRIBUTE,
+	);
+};
+
 export const html = (
 	statics: TemplateStringsArray,
 	...values: ReadonlyArray<unknown>
-): Template => {
-	let shouldHeadQuoteBeRemoved = false;
-
-	return {
-		[templateId]: true,
-		html: statics.reduce((all, current, index) => {
-			const previousTemplate =
-				all + (shouldHeadQuoteBeRemoved ? current.slice(1) : current);
-
-			shouldHeadQuoteBeRemoved = false;
+): Template => ({
+	[templateId]: true,
+	html: statics
+		.reduce((all, current, index) => {
+			const previousTemplate = all + current;
 
 			// Statics is always greater by one then values.
 			// So we must not create marker for last static part.
@@ -64,51 +147,77 @@ export const html = (
 
 			const value = values[index];
 
-			if (isTemplate(value)) {
-				return previousTemplate + value.html;
-			}
-
-			if (attributeName !== undefined && !isFunction(value)) {
+			if (attributeName === undefined) {
+				return isIterable(value)
+					? Array.from(value).reduce(
+							(accumulator: string, item) => buildStaticHTML(accumulator, item),
+							previousTemplate,
+					  )
+					: buildStaticHTML(previousTemplate, value);
+			} else {
 				switch (attributeName.charAt(0)) {
-					case TOGGLE_SYMBOL: {
-						shouldHeadQuoteBeRemoved = /['"]$/.test(previousTemplate);
-						return previousTemplate.replace(
-							new RegExp(`${'\\' + attributeName}=['"]?`),
-							Boolean(value) ? attributeName.slice(1) : '',
+					case HTML_SYMBOL.HOOK:
+					case HTML_SYMBOL.EVENT:
+					case HTML_SYMBOL.PROPERTY: {
+						const marker = createMarker(
+							previousTemplate,
+							value,
+							attributeName.charAt(0) as HTML_SYMBOL,
+						);
+
+						markers.set(marker.toString(), marker);
+
+						return (
+							previousTemplate.replace(
+								attributeName,
+								SPECIAL_SYMBOLS[
+									attributeName.charAt(0) as keyof typeof SPECIAL_SYMBOLS
+								] + attributeName.slice(1),
+							) + marker.toString()
 						);
 					}
-					case HOOK_SYMBOL:
-					case EVENT_SYMBOL:
-					case PROPERTY_SYMBOL:
-						break;
+					case HTML_SYMBOL.TOGGLE:
+						return buildStaticToggleAttribute(
+							previousTemplate,
+							attributeName,
+							value,
+						);
 					default:
-						return previousTemplate + sanitize(String(value));
+						return buildStaticRegularAttribute(previousTemplate, value);
 				}
 			}
+		}, '')
+		.replace(
+			new RegExp(`${TO_REMOVE_ATTRIBUTE}=(?<quote>['"]?)\\k<quote>`, 'g'),
+			'',
+		)
+		.replace(
+			regularAttributesWithMarkers,
+			(_, attribute: string, values: string) => {
+				const attributeMarkers = Array.from(markers.values()).filter(
+					(marker) =>
+						marker.type === MarkerType.REGULAR_ATTRIBUTE &&
+						values.includes(marker.toString()),
+				);
 
-			// Besides functions value can be instance of Element class or
-			// DocumentFragment. So, we should handle those static values
-			// later.
-			const marker = createMarker(
-				previousTemplate,
-				value,
-				attributeName?.charAt(0),
-			);
+				const filledValues = attributeMarkers.reduce(
+					(part, { value, toString }) =>
+						part.replace(
+							toString(),
+							sanitize(String(isFunction(value) ? value() : value)),
+						),
+					values.replace(/['"]/g, ''),
+				);
 
-			const previousTemplatePart: string =
-				attributeName !== undefined &&
-				Object.keys(SPECIAL_SYMBOLS).includes(attributeName.charAt(0))
-					? previousTemplate.replace(
-							attributeName,
-							SPECIAL_SYMBOLS[
-								attributeName.charAt(0) as keyof typeof SPECIAL_SYMBOLS
-							] + attributeName.slice(1),
-					  )
-					: previousTemplate;
-
-			markers.set(marker.toString(), marker);
-
-			return previousTemplatePart + marker.toString();
-		}, ''),
-	};
-};
+				return ` ${
+					attributeMarkers.length > 0
+						? // We should add extra whitespace because of the RegExp above.
+						  ` ${REGULAR_ATTRIBUTE_PREFIX + attribute}="${values.replace(
+								/['"]/g,
+								'',
+						  )}"`
+						: ''
+				} ${attribute}="${filledValues}"`;
+			},
+		),
+});

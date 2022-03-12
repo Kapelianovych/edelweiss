@@ -1,4 +1,5 @@
 import { data } from './core/reactive/data';
+import { untrack } from './core/reactive/untrack';
 
 export interface Resource<T, K> {
 	/**
@@ -20,7 +21,7 @@ export interface Resource<T, K> {
 }
 
 /** Loads asynchronous resources. */
-export const lazy = <T, K>(
+export const lazy = <T, K = unknown>(
 	future: (dependency?: K) => Promise<T>,
 	fallback: T,
 ): Resource<T, K> => {
@@ -30,8 +31,9 @@ export const lazy = <T, K>(
 
 	const fn = (dependency?: K) => {
 		if (
-			Object.is(value(), fallback) ||
-			(dependency !== undefined && future.length > 0)
+			!untrack(loading) &&
+			(Object.is(value(), fallback) ||
+				(dependency !== undefined && future.length > 0))
 		) {
 			loading(true);
 

@@ -1,11 +1,10 @@
-import { Marker } from '../marker';
+import { markers } from '../html';
 import { EVENT_ATTRIBUTE_PREFIX } from '../constants';
 
 export const processEventListener = (
 	currentNode: Element,
 	name: string,
 	value: string,
-	markers: Map<string, Marker>,
 ): void => {
 	const eventMarker = markers.get(value);
 

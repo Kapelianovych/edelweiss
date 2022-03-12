@@ -4,7 +4,10 @@ export const TOGGLE_ATTRIBUTE_PREFIX = '__toggle-';
 export const REGULAR_ATTRIBUTE_PREFIX = '__regular-';
 export const PROPERTY_ATTRIBUTE_PREFIX = '__property-';
 
-export const HOOK_SYMBOL = ':';
-export const EVENT_SYMBOL = '@';
-export const TOGGLE_SYMBOL = '?';
-export const PROPERTY_SYMBOL = '.';
+export enum HTML_SYMBOL {
+	HOOK = ':',
+	REST = '',
+	EVENT = '@',
+	TOGGLE = '?',
+	PROPERTY = '.',
+}
