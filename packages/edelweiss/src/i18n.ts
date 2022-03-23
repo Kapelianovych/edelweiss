@@ -1,5 +1,5 @@
-import { data } from './core/reactive/data';
-import { Computed } from './core/reactive/global';
+import { data } from './reactive/data';
+import { Computed } from './reactive/global';
 
 /** Describes common shape of user-provided texts. */
 export interface Texts {
@@ -9,17 +9,26 @@ export interface Texts {
 export interface Translation {
 	readonly code: string;
 	readonly texts: Texts;
+	readonly namespace?: string;
 }
 
-const languageCode = data(globalThis.window?.navigator.language ?? '');
-const translationsCache = new Map<string, Texts>();
+const DEFAULT_NAMESPACE = '__default';
+
+const KEY_SEPARATOR = '###';
+
+const createKey = (
+	code: string,
+	namespace: string = DEFAULT_NAMESPACE,
+): string => `${code}${KEY_SEPARATOR}${namespace}`;
 
 /**
  * Function that if called without arguments returns
  * current language's code. Otherwise, it changes
  * the language of the application.
  */
-export const language = languageCode;
+export const language = data(globalThis.navigator?.language ?? '');
+
+const translationsCache = new Map<string, Texts>();
 
 /**
  * Add every translation object as supported language.
@@ -29,7 +38,9 @@ export const language = languageCode;
  * will overwrite previous one.
  */
 export const translations = (...args: ReadonlyArray<Translation>): void =>
-	args.forEach(({ code, texts }) => translationsCache.set(code, texts));
+	args.forEach(({ code, texts, namespace }) =>
+		translationsCache.set(createKey(code, namespace), texts),
+	);
 
 const insertVariables = (to: string, variable: string, value: string): string =>
 	to.replace(new RegExp(`{\\s*${variable}\\s*}`, 'g'), value);
@@ -66,10 +77,10 @@ type VariableName<A extends string> =
 type Variables<
 	T extends string | object,
 	P extends string,
-	D extends string,
-> = P extends `${infer A}${D}${infer O}`
+	Delimiter extends string,
+> = P extends `${infer A}${Delimiter}${infer O}`
 	? A extends keyof T
-		? Variables<Extract<T[A], string | object>, O, D>
+		? Variables<Extract<T[A], string | object>, O, Delimiter>
 		: never
 	: P extends `${infer A}`
 	? A extends keyof T
@@ -88,31 +99,45 @@ type Variables<
 export const translate =
 	<
 		T extends Texts,
-		P extends Join<KeysToPath<T>, Delimiter> = Join<KeysToPath<T>, Delimiter>,
+		Namespace extends string = typeof DEFAULT_NAMESPACE,
+		Path extends Join<KeysToPath<T>, Delimiter> = Join<
+			KeysToPath<T>,
+			Delimiter
+		>,
 	>(
-		path: P,
-		variables: Record<Variables<T, P, Delimiter>, string> = {},
+		path: Path | `${Namespace}${Delimiter}${Path}`,
+		variables: Record<Variables<T, Path, Delimiter>, string> = {},
 	): Computed<undefined | string | Texts> =>
 	() => {
-		const code = languageCode();
+		const code = language();
+
+		const pathParts = path.split('.');
+
+		const possibleNamespace = pathParts[0];
+
+		const key = createKey(code, possibleNamespace);
+
+		const containsNamespace = translationsCache.has(key);
+
+		const partsToSearch = containsNamespace ? pathParts.slice(1) : pathParts;
 
 		return Object.entries(variables).reduce<undefined | string | Texts>(
 			(translated, [name, value]) =>
 				typeof translated === 'string'
 					? insertVariables(translated, name, String(value))
 					: translated,
-			path
-				.split('.')
-				.reduce<undefined | string | Texts>(
-					(translated, current) =>
-						!translated || typeof translated === 'string'
-							? translated
-							: translated[current],
-					translationsCache.get(code),
-				),
+			partsToSearch.reduce<undefined | string | Texts>(
+				(translated, current) =>
+					!translated || typeof translated === 'string'
+						? translated
+						: translated[current],
+				translationsCache.get(containsNamespace ? key : createKey(code)),
+			),
 		);
 	};
 
 /** Return codes of all supported languages. */
 export const languages = (): ReadonlyArray<string> =>
-	Array.from(translationsCache.keys());
+	Array.from(translationsCache.keys()).map(
+		(key) => key.split(KEY_SEPARATOR)[0],
+	);

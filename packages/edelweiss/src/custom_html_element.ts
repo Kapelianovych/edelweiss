@@ -1,12 +1,12 @@
-import { render } from './render';
-import { Fragment } from './core/processing/collect';
-import { data, Data } from './core/reactive/data';
+import { render } from './render.browser';
+import { Template } from './html';
+import { data, Data } from './reactive/data';
 
 /** Converts kebab-case to camelCase. */
 const toCamelCase = (name: string): string =>
 	name.replace(/-(\w)/g, (_, letter: string) => letter.toUpperCase());
 
-const attachAccessorsTo = (target: CustomHTMLElement & Properties): void => {
+const attachAccessorsTo = (target: CustomHTMLElement): void => {
 	const constructor = target.constructor as typeof CustomHTMLElement;
 
 	const reactiveProperties = constructor.observedAttributes.reduce(
@@ -35,15 +35,7 @@ const attachAccessorsTo = (target: CustomHTMLElement & Properties): void => {
 /** Allowed type of value of property. */
 export type Property = null | string;
 
-/**
- * Generic object with any amount of properties
- * whose value type is `string` or `null`.
- */
-interface Properties {
-	[name: string]: Property;
-}
-
-const HTMLElementClass = globalThis?.HTMLElement ?? class {};
+const HTMLElementClass = globalThis.HTMLElement ?? class {};
 
 /**
  * Parent class for custom elements.
@@ -68,50 +60,49 @@ export abstract class CustomHTMLElement extends HTMLElementClass {
 		return [];
 	}
 
-	/**
-	 * When overriding constructor always call **super()** at start,
-	 * so that the correct prototype chain will be established.
-	 */
-	constructor() {
-		super();
+	private connectedCallback() {
+		if (this.isConnected) {
+			attachAccessorsTo(this);
 
-		attachAccessorsTo(this as unknown as CustomHTMLElement & Properties);
+			render(
+				this.render(),
+				this.attachShadow({
+					mode: 'open',
+				}),
+			);
 
-		render(
-			this.template(),
-			this.attachShadow({
-				mode: 'open',
-			}),
-		);
+			this.connected?.();
+		}
 	}
 
 	/**
 	 * Called this method when the element is added to the document
 	 * (can be called many times if an element is repeatedly added/removed).
 	 */
-	protected declare connectedCallback: VoidFunction;
+	protected connected?(): void;
+
+	private disconnectedCallback() {
+		this.disconnected?.();
+	}
 
 	/**
 	 * Called this method when the element is removed from the document
 	 * (can be called many times if an element is repeatedly added/removed).
 	 */
-	protected declare disconnectedCallback: VoidFunction;
+	protected disconnected?(): void;
+
+	private adoptedCallback() {
+		this.adopted?.();
+	}
 
 	/**
 	 * Called when the element is moved to a new document
 	 * (happens in `document.adoptNode`).
 	 */
-	protected declare adoptedCallback: VoidFunction;
+	protected adopted?(): void;
 
-	/**
-	 * Called when one of attributes returned by `observedAttributes`
-	 * is modified.
-	 *
-	 * Call `super.attributeChangedCallback` while overriding this
-	 * method.
-	 */
-	protected attributeChangedCallback(
-		this: CustomHTMLElement & Properties,
+	private attributeChangedCallback(
+		this: CustomHTMLElement & { [key: string]: Property },
 		name: string,
 		oldValue: Property,
 		newValue: Property,
@@ -119,10 +110,22 @@ export abstract class CustomHTMLElement extends HTMLElementClass {
 		if (!Object.is(oldValue, newValue)) {
 			this[toCamelCase(name)] = newValue;
 		}
+
+		this.attributeChanged?.(name, oldValue, newValue);
 	}
 
+	/**
+	 * Called when one of attributes returned by `observedAttributes`
+	 * is modified.
+	 */
+	protected attributeChanged?(
+		name: string,
+		oldValue: Property,
+		newValue: Property,
+	): void;
+
 	/** Defines inner DOM of custom element as Shadow DOM. */
-	protected abstract template(): Fragment;
+	protected abstract render(): Template | Iterable<Template>;
 }
 
 /**

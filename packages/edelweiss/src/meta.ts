@@ -1,11 +1,13 @@
 import { current } from './router';
-import { Computed } from './core/reactive/global';
-import { Fragment } from './core/processing/collect';
-import { patternToRegExp } from './core/utilities/pattern';
+import { Template } from './html';
+import { Computed } from './reactive/global';
+import { isIterable } from './checks';
+import { patternToRegExp } from './pattern';
 
 export interface MetaRecord {
 	readonly route: string;
-	readonly template: Fragment;
+	readonly exact?: boolean;
+	readonly template: Template | Iterable<Template>;
 }
 
 /**
@@ -13,13 +15,15 @@ export interface MetaRecord {
  * depending on the current route path.
  */
 export const meta =
-	(...templates: readonly MetaRecord[]): Computed<Fragment> =>
+	(...templates: readonly MetaRecord[]): Computed<readonly Template[]> =>
 	() => {
 		const path = current();
 
-		const { template } =
-			templates.find(({ route }) => patternToRegExp(route).test(path)) ??
-			templates[templates.length - 1];
-
-		return template;
+		return templates
+			.filter(({ route, exact = false }) =>
+				patternToRegExp(route, exact).test(path),
+			)
+			.flatMap(({ template }) =>
+				isIterable(template) ? Array.from(template) : template,
+			);
 	};

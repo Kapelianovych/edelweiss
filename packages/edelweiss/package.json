@@ -1,16 +1,16 @@
 {
 	"name": "@prostory/edelweiss",
-	"version": "2.1.0-alpha.7",
+	"version": "2.1.0-alpha.8",
 	"description": "Small library that builds HTML from JS.",
 	"keywords": [
 		"Edelweiss",
 		"UI framework"
 	],
-	"main": "./index.js",
+	"main": "./mod.js",
 	"exports": {
-		".": "./index.js",
-		"./index": "./index.js",
-		"./index.js": "./index.js"
+		".": "./mod.js",
+		"./mod": "./mod.js",
+		"./mod.js": "./mod.js"
 	},
 	"type": "module",
 	"repository": {
@@ -18,9 +18,10 @@
 		"url": "https://github.com/YevhenKap/edelweiss"
 	},
 	"scripts": {
+		"test": "uvu -r tsm tests",
 		"clean": "rimraf build/*",
 		"prebuild": "npm run clean",
-		"build": "rollup -c",
+		"build": "node esbuild.config.js && tsc",
 		"postbuild": "npm run copy",
 		"copy": "npm run copy:docs; npm run copy:settings; npm run copy:license",
 		"copy:docs": "cpy README.md build/",

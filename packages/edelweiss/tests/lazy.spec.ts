@@ -60,7 +60,7 @@ describe('lazy', () => {
 		});
 	});
 
-	test('before getting value it should not loading resources', () => {
+	test('before getting value it should not load resources', () => {
 		const a = lazy(() => Promise.resolve('a'), '');
 
 		expect(a.loading()).toBe(false);

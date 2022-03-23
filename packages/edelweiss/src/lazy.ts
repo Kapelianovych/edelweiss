@@ -1,5 +1,5 @@
-import { data } from './core/reactive/data';
-import { untrack } from './core/reactive/untrack';
+import { data } from './reactive/data';
+import { untrack } from './reactive/untrack';
 
 export interface Resource<T, K> {
 	/**

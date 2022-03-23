@@ -1,12 +1,12 @@
-import { data } from './core/reactive/data';
-import { html } from './core/html';
-import { Computed } from './core/reactive/global';
-import { Fragment } from './core/processing/collect';
-import { patternToRegExp } from './core/utilities/pattern';
+import { data } from './reactive/data';
+import { Computed } from './reactive/global';
+import { patternToRegExp } from './pattern';
+import { html, Template } from './html';
 import { CustomHTMLElement, registerElement } from './custom_html_element';
 
 /** Shape of a route. */
 export interface Route {
+	readonly exact?: boolean;
 	/**
 	 * Used to match against the whole URL.
 	 * Pattern must not start with `^` and end with `$`.
@@ -14,15 +14,16 @@ export interface Route {
 	readonly pattern: string;
 	/**
 	 * Holds a processing for the route.
-	 * Can be either `Fragment` directly or function
+	 * Can be either `Template | Iterable<Template>` directly or function
 	 * that accepts parameters that are declared in
-	 * _pattern_ property and returns a `Fragment` value.
+	 * _pattern_ property and returns a `Template | Iterable<Template>` value.
 	 *
 	 * @param parameters regexp's capturing groups.
 	 */
 	readonly template:
-		| Fragment
-		| ((...parameters: ReadonlyArray<string>) => Fragment);
+		| Template
+		| Iterable<Template>
+		| ((...parameters: ReadonlyArray<string>) => Template | Iterable<Template>);
 }
 
 /**
@@ -32,7 +33,7 @@ export interface Route {
  * If no route is defined for the _path_,
  * then the last route will be rendered.
  */
-export const current = data(globalThis.window?.location.pathname ?? '/');
+export const current = data(globalThis.location?.pathname ?? '/');
 
 /**
  * Creates reactive router.
@@ -40,20 +41,26 @@ export const current = data(globalThis.window?.location.pathname ?? '/');
  * matched against a whole URL.
  */
 export const router =
-	(...routes: ReadonlyArray<Route>): Computed<Fragment> =>
+	(...routes: ReadonlyArray<Route>): Computed<Template | Iterable<Template>> =>
 	() => {
 		const path = current();
+
 		const route =
-			routes.find((route) => patternToRegExp(route.pattern).test(path)) ??
+			routes.find(({ pattern, exact = false }) =>
+				patternToRegExp(pattern, exact).test(path),
+			) ??
 			// Last route is intended for a default page.
 			// Possibly "Not found" page.
 			routes[routes.length - 1];
 
-		globalThis.window?.history.pushState({ path }, '', path);
+		globalThis.history?.pushState({ path }, '', path);
 
 		return typeof route.template === 'function'
 			? route.template(
-					...(patternToRegExp(route.pattern).exec(path) ?? []).slice(1),
+					...(
+						patternToRegExp(route.pattern, route.exact ?? false).exec(path) ??
+						[]
+					).slice(1),
 			  )
 			: route.template;
 	};
@@ -62,7 +69,7 @@ export const router =
 // or through _History API_:
 //  - forward
 //  - back
-globalThis.window?.addEventListener('popstate', (event: PopStateEvent) => {
+globalThis.addEventListener?.('popstate', (event: PopStateEvent) => {
 	if (event.state) {
 		current(event.state.path);
 	}
@@ -70,15 +77,13 @@ globalThis.window?.addEventListener('popstate', (event: PopStateEvent) => {
 
 /**
  * Link element that do navigation according to `href`
- * attribute. Similar to `<a>` element, but works with
- * `router`.
+ * attribute. Similar to `<a>` element, but works on
+ * the browser with `router`.
  */
 export class RouteLinkElement extends CustomHTMLElement {
 	static readonly tagName = 'route-link';
 
-	constructor() {
-		super();
-
+	connected() {
 		this.addEventListener('click', () => {
 			const href = this.getAttribute('href');
 			if (href !== null) {
@@ -87,7 +92,7 @@ export class RouteLinkElement extends CustomHTMLElement {
 		});
 	}
 
-	template(): Fragment {
+	render(): Template | Iterable<Template> {
 		return html`
 			<style>
 				:host {
