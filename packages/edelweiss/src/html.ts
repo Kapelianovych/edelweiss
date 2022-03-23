@@ -78,7 +78,7 @@ const prepareNode = (
 	markers: Map<Marker, Container>,
 ): string => {
 	if (isPrimitive(value)) {
-		return String(value);
+		return sanitize(String(value));
 	} else if (isTemplate(value)) {
 		value.markers.forEach((value, key) => markers.set(key, value));
 
