@@ -15,6 +15,7 @@ import {
 	ValueType,
 	isTemplate,
 	AttributeMark,
+	PROPERTY_VALUE_SEPARATOR,
 } from './html';
 
 const DATA_SKIP_ATTRIBUTE_NAME = 'data-skip';
@@ -113,11 +114,11 @@ const handleProperty = (
 	value: string,
 	markers: Map<Marker, Container>,
 ): void => {
-	const propertyMarker = markers.get(value);
+	const [propertyName, marker] = value.split(PROPERTY_VALUE_SEPARATOR);
+
+	const propertyMarker = markers.get(marker);
 
 	if (propertyMarker !== undefined) {
-		const propertyName = name.replace(AttributeMark.PROPERTY, '');
-
 		const { value } = propertyMarker;
 
 		isFunction(value)

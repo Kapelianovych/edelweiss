@@ -99,6 +99,22 @@ const prepareNode = (
 	}
 };
 
+export const PROPERTY_VALUE_SEPARATOR = '_:_:_';
+
+const preparePropertyAttribute = (
+	precedingTemplate: string,
+	attribute: string,
+	value: unknown,
+	markers: Map<Marker, Container>,
+): string => {
+	const marker = createAttributeMarker(precedingTemplate);
+	const container = createContainer(value, marker, ValueType.PROPERTY);
+
+	markers.set(marker, container);
+
+	return `${attribute.slice(1)}${PROPERTY_VALUE_SEPARATOR}${marker}`;
+};
+
 export const html = (
 	statics: TemplateStringsArray,
 	...values: readonly unknown[]
@@ -131,23 +147,30 @@ export const html = (
 
 					switch (attributeMark) {
 						case AttributeMark.HOOK:
-						case AttributeMark.EVENT:
-						case AttributeMark.PROPERTY: {
+						case AttributeMark.EVENT: {
 							const marker = createAttributeMarker(precedingTemplate);
 							const container = createContainer(
 								value,
 								marker,
 								attributeMark === AttributeMark.HOOK
 									? ValueType.HOOK
-									: attributeMark === AttributeMark.EVENT
-									? ValueType.EVENT
-									: ValueType.PROPERTY,
+									: ValueType.EVENT,
 							);
 
 							markers.set(marker, container);
 
 							return precedingTemplate + marker;
 						}
+						case AttributeMark.PROPERTY:
+							return (
+								precedingTemplate +
+								preparePropertyAttribute(
+									precedingTemplate,
+									attribute,
+									value,
+									markers,
+								)
+							);
 						case AttributeMark.TOGGLE: {
 							if (isFunction(value)) {
 								const marker = createAttributeMarker(precedingTemplate);
