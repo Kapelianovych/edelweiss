@@ -5,7 +5,7 @@ import { isFunction, isIterable, isObject } from './checks';
 const TO_REMOVE_ATTRIBUTE_NAME = 'data-unique';
 
 const TO_REMOVE_ATTRIBUTE_REGEXP = new RegExp(
-	`${TO_REMOVE_ATTRIBUTE_NAME}=(?:(?<quote>['"])[^'"]*\\k<quote>|\S*)`,
+	`${TO_REMOVE_ATTRIBUTE_NAME}=(?:(?<quote>['"])[^'"]*\\k<quote>|\\S*)`,
 	'g',
 );
 
@@ -70,7 +70,7 @@ const isPrimitive = (
 export const isTemplate = (value: unknown): value is Template =>
 	isObject(value) && templateId in value;
 
-const PRECEDING_ATTRIBUTE_REGEXP = /(\S+)\s*=\s*(?:['"][^'"]*|[^\s<>]*)$/;
+const PRECEDING_ATTRIBUTE_REGEXP = /(\S+)\s*=\s*(?:['"][^'"]*|[^\s<>=]*)$/;
 
 const prepareNode = (
 	uniqueString: string,
@@ -162,11 +162,13 @@ export const html = (
 								return precedingTemplate + marker;
 							} else {
 								return precedingTemplate.replace(
-									new RegExp(`\\${attribute}=['"]?$`),
-									(match) =>
-										Boolean(value)
+									new RegExp(`\\${attribute}=(['"]?)$`),
+									(match, quote) =>
+										(Boolean(value)
 											? match.slice(1)
-											: match.replace(attribute, TO_REMOVE_ATTRIBUTE_NAME),
+											: match.replace(attribute, TO_REMOVE_ATTRIBUTE_NAME)) +
+										// Add quotes if there aren't any
+										(quote ? '' : '""'),
 								);
 							}
 						}

@@ -9,7 +9,7 @@ const TOGGLE_ATTRIBUTE_REGEX =
 const REGULAR_ATTRIBUTE_REGEX =
 	/\s([\w-]+)\s*=\s*((?<quote>['"])[^'"]*{{\w+}}[^'"]*\k<quote>|{{\w+}})/g;
 
-const NODE_REGEX = /(<!--{{start-\w+}}-->)\s*(<!--{{end-\w+}}-->)/g;
+const NODE_REGEX = /(<!--{{start-(?<id>\w+)}}-->)\s*(<!--{{end-\k<id>}}-->)/g;
 
 const handleToggleAttribute = (
 	html: string,
