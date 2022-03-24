@@ -59,7 +59,7 @@ const collectFragments = (fragments: unknown): string =>
 		: packFragment(fragments);
 
 const handleNode = (html: string, containers: readonly Container[]): string =>
-	html.replace(NODE_REGEX, (match, leftComment, rightComment) => {
+	html.replace(NODE_REGEX, (match, leftComment, _hash, rightComment) => {
 		const container = containers.find(({ marker }) => match === marker) ?? null;
 
 		return container === null
