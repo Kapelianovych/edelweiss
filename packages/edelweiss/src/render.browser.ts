@@ -19,7 +19,7 @@ import {
 } from './html';
 
 const DATA_SKIP_ATTRIBUTE_NAME = 'data-skip';
-const DATA_FILLED_ATTRIBUTE_NAME = 'data-filled';
+export const DATA_FILLED_ATTRIBUTE_NAME = '__data-prefilled';
 
 const shouldBeHydrated = (): boolean =>
 	!document.body.hasAttribute(DATA_FILLED_ATTRIBUTE_NAME);
@@ -335,15 +335,18 @@ const collectMarkers = (fragment: Template): Map<Marker, Container> => {
 	return markers;
 };
 
-export const hydrate = (
-	fragment: Template | Iterable<Template>,
-	to: Element,
-): void => {
+export const hydrate = (fragment: Template | Iterable<Template>): void => {
+	const markers = isTemplate(fragment)
+		? collectMarkers(fragment)
+		: new Map<Marker, Container>();
+
 	if (isIterable(fragment)) {
-		Array.from(fragment).forEach((part) => hydrate(part, to));
-	} else {
-		traverseFragment(to, collectMarkers(fragment));
+		Array.from(fragment).forEach((part) =>
+			collectMarkers(part).forEach((value, key) => markers.set(key, value)),
+		);
 	}
+
+	traverseFragment(document.documentElement, markers);
 
 	document.body.removeAttribute(DATA_FILLED_ATTRIBUTE_NAME);
 };

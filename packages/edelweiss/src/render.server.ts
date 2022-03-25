@@ -2,6 +2,7 @@ import { sanitize } from './sanitizer';
 import { isTemplate, Template } from './html';
 import { isFunction, isIterable } from './checks';
 import { AttributeMark, Container } from './html';
+import { DATA_FILLED_ATTRIBUTE_NAME } from './render.browser';
 
 const TOGGLE_ATTRIBUTE_REGEX =
 	/\?([\w-]+)\s*=\s*(?<quote>['"]?)({{\w+}})\k<quote>/g;
@@ -87,9 +88,20 @@ const traverseFragment = (fragment: Template): string => {
 	return handleNode(htmlWithRegularAttributes, containers);
 };
 
+const BODY_REGEX = /<body([^>]*)>/;
+
+const injectDataFilledAttributeIntoBody = (html: string): string =>
+	html.replace(BODY_REGEX, (match, attributes) =>
+		match.includes(DATA_FILLED_ATTRIBUTE_NAME)
+			? match
+			: `<body ${DATA_FILLED_ATTRIBUTE_NAME}="" ${attributes}>`,
+	);
+
 export const renderToString = (
 	fragment: Template | Iterable<Template>,
 ): string =>
-	isTemplate(fragment)
-		? traverseFragment(fragment)
-		: Array.from(fragment).map(renderToString).join('');
+	injectDataFilledAttributeIntoBody(
+		isTemplate(fragment)
+			? traverseFragment(fragment)
+			: Array.from(fragment).map(renderToString).join(''),
+	);
