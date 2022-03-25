@@ -238,7 +238,7 @@ const handleNodes = (
 
 	if (nodeMarker !== undefined) {
 		const { value } = nodeMarker;
-		console.log(value);
+
 		isFunction(value)
 			? effect(() => {
 					const nodes = value();
