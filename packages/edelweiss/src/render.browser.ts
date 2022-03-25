@@ -19,6 +19,7 @@ import {
 } from './html';
 
 const DATA_SKIP_ATTRIBUTE_NAME = 'data-skip';
+const DATA_SKIP_ONLY_ATTRIBUTE_NAME = 'data-skip-only';
 export const DATA_FILLED_ATTRIBUTE_NAME = '__data-prefilled';
 
 const shouldBeHydrated = (): boolean =>
@@ -202,9 +203,7 @@ const packFragment = (fragment: unknown): DocumentFragment => {
 	const documentFragment = document.createDocumentFragment();
 
 	if (isTemplate(fragment)) {
-		documentFragment.append(
-			traverseFragment(parse(fragment.html), fragment.markers),
-		);
+		documentFragment.append(traverse(parse(fragment.html), fragment.markers));
 	} else if (fragment instanceof DocumentFragment) {
 		documentFragment.append(fragment);
 	} else if (fragment instanceof HTMLTemplateElement) {
@@ -239,7 +238,7 @@ const handleNodes = (
 
 	if (nodeMarker !== undefined) {
 		const { value } = nodeMarker;
-
+		console.log(value);
 		isFunction(value)
 			? effect(() => {
 					const nodes = value();
@@ -257,10 +256,7 @@ const handleNodes = (
 const isComment = (node: Node): node is Comment =>
 	node.nodeType === Node.COMMENT_NODE;
 
-const traverseFragment = (
-	fragment: Element | DocumentFragment,
-	markers: Map<Marker, Container>,
-): Element | DocumentFragment => {
+const traverse = (fragment: Node, markers: Map<Marker, Container>): Node => {
 	const walker = document.createTreeWalker(
 		fragment,
 		NodeFilter.SHOW_ELEMENT + NodeFilter.SHOW_COMMENT,
@@ -271,9 +267,14 @@ const traverseFragment = (
 
 		if (
 			!isComment(currentNode) &&
-			currentNode.hasAttribute(DATA_SKIP_ATTRIBUTE_NAME)
+			currentNode.hasAttribute(DATA_SKIP_ONLY_ATTRIBUTE_NAME)
 		) {
 			continue;
+		} else if (
+			!isComment(currentNode) &&
+			currentNode.hasAttribute(DATA_SKIP_ATTRIBUTE_NAME)
+		) {
+			break;
 		}
 
 		isComment(currentNode)
@@ -311,7 +312,7 @@ export const render = (
 			.reverse()
 			.forEach((part) => render(part, to));
 	} else {
-		to.prepend(traverseFragment(parse(fragment.html), fragment.markers));
+		to.prepend(traverse(parse(fragment.html), fragment.markers));
 		callHookOnElementWithChildren(Hooks.MOUNTED, to);
 	}
 };
@@ -329,6 +330,14 @@ const collectMarkers = (fragment: Template): Map<Marker, Container> => {
 
 			if (isTemplate(result)) {
 				collectMarkers(result).forEach((value, key) => markers.set(key, value));
+			} else if (isIterable(result)) {
+				Array.from(result)
+					.filter(isTemplate)
+					.forEach((template) =>
+						collectMarkers(template).forEach((value, key) =>
+							markers.set(key, value),
+						),
+					);
 			}
 		});
 
@@ -346,7 +355,7 @@ export const hydrate = (fragment: Template | Iterable<Template>): void => {
 		);
 	}
 
-	traverseFragment(document.documentElement, markers);
+	traverse(document, markers);
 
 	document.body.removeAttribute(DATA_FILLED_ATTRIBUTE_NAME);
 };
