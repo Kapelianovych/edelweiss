@@ -12,7 +12,6 @@ import {
 	Marker,
 	Template,
 	Container,
-	ValueType,
 	isTemplate,
 	AttributeMark,
 	PROPERTY_VALUE_SEPARATOR,
@@ -22,8 +21,8 @@ const DATA_SKIP_ATTRIBUTE_NAME = 'data-skip';
 const DATA_SKIP_ONLY_ATTRIBUTE_NAME = 'data-skip-only';
 export const DATA_FILLED_ATTRIBUTE_NAME = '__data-prefilled';
 
-const shouldBeHydrated = (): boolean =>
-	!document.body.hasAttribute(DATA_FILLED_ATTRIBUTE_NAME);
+const isHydrationMode = (): boolean =>
+	document.body.hasAttribute(DATA_FILLED_ATTRIBUTE_NAME);
 
 const parse = (html: string): DocumentFragment =>
 	document.createRange().createContextualFragment(html);
@@ -96,7 +95,7 @@ const handleToggleAttribute = (
 		effect(() => {
 			const shouldAttributeBePresent = Boolean((value as Function)());
 
-			if (shouldBeHydrated()) {
+			if (!isHydrationMode()) {
 				toggleAttribute(currentNode, attributeName, shouldAttributeBePresent);
 				callHook(Hooks.UPDATED, currentNode);
 			}
@@ -155,7 +154,7 @@ const handleRegularAttribute = (
 			)
 			.trim();
 
-		if (shouldBeHydrated()) {
+		if (!isHydrationMode()) {
 			currentNode.setAttribute(
 				name.replace(AttributeMark.REGULAR, ''),
 				attributeValue,
@@ -199,11 +198,18 @@ const callMountedHook = (currentNode: Comment) => {
 const closedCommentWith = (key: string): string =>
 	`<!--${key}-->` + `<!--${key.replace('start', 'end')}-->`;
 
-const packFragment = (fragment: unknown): DocumentFragment => {
+const packFragment = (
+	fragment: unknown,
+): readonly [DocumentFragment, readonly Container[]] => {
+	const containers: Container[] = [];
 	const documentFragment = document.createDocumentFragment();
 
 	if (isTemplate(fragment)) {
-		documentFragment.append(traverse(parse(fragment.html), fragment.markers));
+		isHydrationMode()
+			? containers.push(...fragment.markers.values())
+			: documentFragment.append(
+					traverse(parse(fragment.html), fragment.markers),
+			  );
 	} else if (fragment instanceof DocumentFragment) {
 		documentFragment.append(fragment);
 	} else if (fragment instanceof HTMLTemplateElement) {
@@ -214,19 +220,42 @@ const packFragment = (fragment: unknown): DocumentFragment => {
 		documentFragment.append(document.createTextNode(String(fragment)));
 	}
 
-	return documentFragment;
+	return [documentFragment, containers];
 };
 
-const collectFragments = (fragments: unknown): DocumentFragment =>
+const collectFragments = (
+	fragments: unknown,
+): readonly [DocumentFragment, readonly Container[]] =>
 	isIterable(fragments)
 		? Array.from(fragments)
 				.map(packFragment)
-				.reduce((accumulator, current) => {
-					accumulator.append(current);
+				.reduce(
+					([accumulator, allContainers], [current, fragmentContainers]) => {
+						accumulator.append(current);
 
-					return accumulator;
-				}, document.createDocumentFragment())
+						return [accumulator, allContainers.concat(fragmentContainers)];
+					},
+					[document.createDocumentFragment(), []],
+				)
 		: packFragment(fragments);
+
+const hydrateNodes = (
+	currentNode: Comment,
+	nodes: unknown,
+	markers: Map<Marker, Container>,
+): void => {
+	if (isTemplate(nodes)) {
+		const [, containers] = collectFragments(nodes);
+
+		containers.forEach((container) => markers.set(container.marker, container));
+	} else if (isIterable(nodes)) {
+		Array.from(nodes).forEach((part) =>
+			hydrateNodes(currentNode, part, markers),
+		);
+	} else {
+		currentNode.after(collectFragments(nodes)[0]);
+	}
+};
 
 const handleNodes = (
 	currentNode: Comment,
@@ -243,13 +272,15 @@ const handleNodes = (
 			? effect(() => {
 					const nodes = value();
 
-					if (shouldBeHydrated()) {
+					if (isHydrationMode()) {
+						hydrateNodes(currentNode, nodes, markers);
+					} else {
 						unmountOldNodes(currentNode);
-						currentNode.after(collectFragments(nodes));
+						currentNode.after(collectFragments(nodes)[0]);
 						callMountedHook(currentNode);
 					}
 			  })
-			: currentNode.after(collectFragments(value));
+			: currentNode.after(collectFragments(value)[0]);
 	}
 };
 
@@ -317,43 +348,13 @@ export const render = (
 	}
 };
 
-const collectMarkers = (fragment: Template): Map<Marker, Container> => {
-	const markers = fragment.markers;
-
-	Array.from(markers.values())
-		.filter(
-			({ valueType, value }) =>
-				valueType === ValueType.NODE && isFunction(value),
-		)
-		.forEach(({ value }) => {
-			const result = (value as Function)();
-
-			if (isTemplate(result)) {
-				collectMarkers(result).forEach((value, key) => markers.set(key, value));
-			} else if (isIterable(result)) {
-				Array.from(result)
-					.filter(isTemplate)
-					.forEach((template) =>
-						collectMarkers(template).forEach((value, key) =>
-							markers.set(key, value),
-						),
-					);
-			}
-		});
-
-	return markers;
-};
-
 export const hydrate = (fragment: Template | Iterable<Template>): void => {
 	const markers = isTemplate(fragment)
-		? collectMarkers(fragment)
-		: new Map<Marker, Container>();
-
-	if (isIterable(fragment)) {
-		Array.from(fragment).forEach((part) =>
-			collectMarkers(part).forEach((value, key) => markers.set(key, value)),
-		);
-	}
+		? fragment.markers
+		: Array.from(fragment).reduce((accumulator, { markers }) => {
+				markers.forEach((value, key) => accumulator.set(key, value));
+				return accumulator;
+		  }, new Map());
 
 	traverse(document, markers);
 
