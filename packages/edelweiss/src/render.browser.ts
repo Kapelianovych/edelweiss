@@ -359,4 +359,6 @@ export const hydrate = (fragment: Template | Iterable<Template>): void => {
 	traverse(document, markers);
 
 	document.body.removeAttribute(DATA_FILLED_ATTRIBUTE_NAME);
+
+	callHookOnElementWithChildren(Hooks.MOUNTED, document.documentElement);
 };
