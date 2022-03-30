@@ -5,7 +5,7 @@ import { isFunction, isIterable, isObject } from './checks';
 const TO_REMOVE_ATTRIBUTE_NAME = 'data-unique';
 
 const TO_REMOVE_ATTRIBUTE_REGEXP = new RegExp(
-	`${TO_REMOVE_ATTRIBUTE_NAME}=(?:(?<quote>['"])[^'"]*\\k<quote>|\\S*)`,
+	`${TO_REMOVE_ATTRIBUTE_NAME}=(?:(?<quote>['"])[^'"]*\\k<quote>|[^\\s>]*)`,
 	'g',
 );
 
