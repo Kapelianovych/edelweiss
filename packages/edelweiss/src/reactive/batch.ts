@@ -1,4 +1,4 @@
-export const updateQueue: Map<symbol, VoidFunction> = new Map();
+export const updateQueue: Set<VoidFunction> = new Set();
 
 export let stoppedTime = false;
 
@@ -10,6 +10,6 @@ export const batch = (fn: VoidFunction): void => {
 	stoppedTime = true;
 	fn();
 	stoppedTime = false;
-	updateQueue.forEach((effect) => effect());
+	updateQueue.forEach((update) => update());
 	updateQueue.clear();
 };

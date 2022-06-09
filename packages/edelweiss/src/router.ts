@@ -1,7 +1,7 @@
 import { data } from './reactive/data';
 import { Computed } from './reactive/global';
-import { patternToRegExp } from './pattern';
 import { html, Template } from './html';
+import { patternToRegExp } from './pattern';
 import { CustomHTMLElement, registerElement } from './custom_html_element';
 
 /** Shape of a route. */

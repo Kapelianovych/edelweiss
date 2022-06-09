@@ -1,6 +1,6 @@
 import { initializedEffect, runningEffect } from './global';
 
-/** Registers cleanup function for currently invoked effect. */
+/** Registers a cleanup function for the currently invoked effect. */
 export const cleanup = (fn: VoidFunction): void => {
 	const effect = initializedEffect() ?? runningEffect();
 

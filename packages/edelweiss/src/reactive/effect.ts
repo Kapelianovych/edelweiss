@@ -15,7 +15,6 @@ export const effect = (fn: Effect): void => {
 	// to the effect and don't impact user-provided function.
 	const innerEffect = () => fn();
 
-	innerEffect.owners = [] as symbol[];
 	innerEffect.children = [] as InnerEffect[];
 	innerEffect.disposed = false;
 
@@ -23,7 +22,7 @@ export const effect = (fn: Effect): void => {
 	// should add the current effect to them as a child.
 	(initializedEffect() ?? runningEffect())?.children.push(innerEffect);
 
-	// Effect can be invoked inside another effect,
+	// Effect may be invoked inside another effect,
 	// so we should preserve the parent effect.
 	const parentEffect = initializedEffect();
 
