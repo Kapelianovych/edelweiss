@@ -1,6 +1,11 @@
 import { currentlyTracked } from './untrack';
 import { stoppedTime, updateQueue } from './batch';
-import { initializedEffect, InnerEffect, runningEffect } from './global';
+import {
+	InnerEffect,
+	currentEffect,
+	endCurrentEffect,
+	registerEffectAsCurrent,
+} from './global';
 
 export interface Data<T> {
 	(): T;
@@ -27,14 +32,15 @@ const update = (listeners: Set<InnerEffect>): void =>
 			// be flushed out of memory.
 			effect.cleanup?.();
 
-			runningEffect(effect);
+			registerEffectAsCurrent(effect);
 			effect();
-			runningEffect(null);
+			endCurrentEffect();
 		}
 	});
 
 /** Creates reactive container for data. */
 export const data = <T>(initial: T): Data<T> => {
+	const id = Symbol();
 	const listeners: Set<InnerEffect> = new Set();
 	let currentValue: T = initial;
 
@@ -50,7 +56,7 @@ export const data = <T>(initial: T): Data<T> => {
 				.forEach((effect) => effect.disposed && listeners.delete(effect));
 
 			if (currentlyTracked) {
-				const effect = initializedEffect() ?? runningEffect();
+				const effect = currentEffect();
 
 				if (effect !== null) {
 					listeners.add(effect);
@@ -62,7 +68,7 @@ export const data = <T>(initial: T): Data<T> => {
 			// Only a distinct value will cause an update.
 			if (!Object.is(currentValue, value)) {
 				stoppedTime
-					? updateQueue.add(() => triggerUpdateWith(value))
+					? updateQueue.set(id, () => triggerUpdateWith(value))
 					: triggerUpdateWith(value);
 			}
 		}

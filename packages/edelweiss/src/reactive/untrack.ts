@@ -7,8 +7,11 @@ import type { Data } from './data';
  */
 export let currentlyTracked = true;
 
-/** Prevent an effect to be dependent from a `data`. */
-export const untrack = <T>(fn: Data<T>): T => {
+/**
+ * Defines a scope that prevents a current effect
+ * containers from tracking any `data` inside it.
+ */
+export const untrack = <T>(fn: (() => T) | Data<T>): T => {
 	currentlyTracked = false;
 	const result = fn();
 	currentlyTracked = true;
