@@ -3,6 +3,7 @@ import { stoppedTime, updateQueue } from './batch';
 import {
 	InnerEffect,
 	currentEffect,
+	parentEffects,
 	endCurrentEffect,
 	registerEffectAsCurrent,
 } from './global';
@@ -65,7 +66,10 @@ export const data = <T>(initial: T): Data<T> => {
 			if (currentlyTracked) {
 				const effect = currentEffect();
 
-				if (effect !== null) {
+				if (
+					effect !== null &&
+					!parentEffects().some((effect) => listeners.has(effect))
+				) {
 					listeners.add(effect);
 				}
 			}

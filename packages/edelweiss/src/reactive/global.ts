@@ -21,6 +21,9 @@ export interface InnerEffect extends Effect {
  */
 const effects: InnerEffect[] = [];
 
+/** Returns parents of the current effect. */
+export const parentEffects = (): readonly InnerEffect[] => effects.slice(0, -1);
+
 /** Returns a current (running) effect. */
 export const currentEffect = (): InnerEffect | null => effects.at(-1) ?? null;
 
