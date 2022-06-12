@@ -12,6 +12,14 @@ export interface Route {
 	/** Is used to match against the whole URL's pathname. */
 	readonly pattern: string;
 	/**
+	 * Signals that this route should be rendered
+	 * if there is no matched route for the URL in
+	 * a current _outlet_ definition.
+	 *
+	 * @default false
+	 */
+	readonly fallback?: boolean;
+	/**
 	 * Holds a processing for the route.
 	 * Can be either `Template | Iterable<Template>` directly or function
 	 * that accepts parameters that are declared in
@@ -55,19 +63,23 @@ effect(() => {
  *
  * If no route is defined for the current URL,
  * then the last route will be rendered.
+ *
+ * If there is no matched route and no route
+ * contains the _fallback_ property, then an empty
+ * string is rendered.
  */
-export const outlet =
-	(...routes: ReadonlyArray<Route>): Computed<Template | Iterable<Template>> =>
-	() => {
+export const outlet = (
+	...routes: readonly Route[]
+): Computed<Template | Iterable<Template>> => {
+	const fallbackRoute = routes.find(({ fallback = false }) => fallback);
+
+	return () => {
 		const path = location();
 
 		const route =
 			routes.find(({ pattern, exact = false }) =>
 				patternToRegExp(pattern, exact).test(path),
-			) ??
-			// Last route is intended for a default page.
-			// Possibly the "Not found" page.
-			routes.at(-1);
+			) ?? fallbackRoute;
 
 		return route === undefined
 			? html``
@@ -80,6 +92,7 @@ export const outlet =
 			  )
 			: route.template;
 	};
+};
 
 // Handles routing that are accomplished with browser's buttons
 // or through _History API_:
