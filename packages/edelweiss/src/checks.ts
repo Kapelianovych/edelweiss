@@ -7,3 +7,8 @@ export const isIterable = <T>(value: unknown): value is Iterable<T> =>
 
 export const isFunction = <T>(value: unknown): value is () => T =>
 	typeof value === 'function';
+
+export const isPrimitive = (
+	value: unknown,
+): value is string | number | boolean | symbol | null | undefined =>
+	!isObject(value) && !isFunction(value);

@@ -1,6 +1,6 @@
 import { effect } from './reactive/effect';
 import { sanitize } from './sanitizer';
-import { isFunction, isIterable } from './checks';
+import { isFunction, isIterable, isPrimitive } from './checks';
 import {
 	Hook,
 	Hooks,
@@ -244,7 +244,9 @@ const hydrateNodes = (
 	nodes: unknown,
 	markers: Map<Marker, Container>,
 ): void => {
-	if (isTemplate(nodes)) {
+	if (isPrimitive(nodes)) {
+		// Do nothing. Primitive values are already inserted on the SSR part.
+	} else if (isTemplate(nodes)) {
 		const [, containers] = collectFragments(nodes);
 
 		containers.forEach((container) => markers.set(container.marker, container));

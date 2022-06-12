@@ -1,6 +1,6 @@
 import { hash } from './hash';
 import { sanitize } from './sanitizer';
-import { isFunction, isIterable, isObject } from './checks';
+import { isFunction, isIterable, isObject, isPrimitive } from './checks';
 
 const TO_REMOVE_ATTRIBUTE_NAME = 'data-unique';
 
@@ -61,11 +61,6 @@ export interface Template {
 
 	readonly [key: symbol]: string;
 }
-
-const isPrimitive = (
-	value: unknown,
-): value is string | number | boolean | symbol | null | undefined =>
-	!isObject(value) && !isFunction(value);
 
 export const isTemplate = (value: unknown): value is Template =>
 	isObject(value) && templateId in value;
