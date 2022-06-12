@@ -1,4 +1,4 @@
-import { batch, cleanup, data, effect, untrack } from '../src';
+import { batch, cleanup, data, effect, untrack } from '../src/mod';
 
 describe('data', () => {
 	it('data should return a function', () => {

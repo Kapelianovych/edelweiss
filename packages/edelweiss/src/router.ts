@@ -33,7 +33,7 @@ export interface Route {
  * If no route is defined for the _path_,
  * then the last route will be rendered.
  */
-export const current = data(globalThis.location?.pathname ?? '/');
+export const location = data(globalThis.location?.pathname ?? '/');
 
 /**
  * Creates reactive router.
@@ -43,7 +43,7 @@ export const current = data(globalThis.location?.pathname ?? '/');
 export const router =
 	(...routes: ReadonlyArray<Route>): Computed<Template | Iterable<Template>> =>
 	() => {
-		const path = current();
+		const path = location();
 
 		const route =
 			routes.find(({ pattern, exact = false }) =>
@@ -71,7 +71,7 @@ export const router =
 //  - back
 globalThis.addEventListener?.('popstate', (event: PopStateEvent) => {
 	if (event.state) {
-		current(event.state.path);
+		location(event.state.path);
 	}
 });
 
@@ -87,7 +87,7 @@ export class RouteLinkElement extends CustomHTMLElement {
 		this.addEventListener('click', () => {
 			const href = this.getAttribute('href');
 			if (href !== null) {
-				current(href);
+				location(href);
 			}
 		});
 	}

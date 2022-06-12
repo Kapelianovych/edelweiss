@@ -1,4 +1,4 @@
-import { current } from './router';
+import { location } from './router';
 import { Template } from './html';
 import { Computed } from './reactive/global';
 import { isIterable } from './checks';
@@ -17,7 +17,7 @@ export interface MetaRecord {
 export const meta =
 	(...templates: readonly MetaRecord[]): Computed<readonly Template[]> =>
 	() => {
-		const path = current();
+		const path = location();
 
 		return templates
 			.filter(({ route, exact = false }) =>
