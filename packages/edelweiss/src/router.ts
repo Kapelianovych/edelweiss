@@ -1,5 +1,7 @@
 import { data } from './reactive/data';
+import { effect } from './reactive/effect';
 import { Computed } from './reactive/global';
+import { isFunction } from './checks';
 import { html, Template } from './html';
 import { patternToRegExp } from './pattern';
 import { CustomHTMLElement, registerElement } from './custom_html_element';
@@ -7,10 +9,7 @@ import { CustomHTMLElement, registerElement } from './custom_html_element';
 /** Shape of a route. */
 export interface Route {
 	readonly exact?: boolean;
-	/**
-	 * Used to match against the whole URL.
-	 * Pattern must not start with `^` and end with `$`.
-	 */
+	/** Is used to match against the whole URL's pathname. */
 	readonly pattern: string;
 	/**
 	 * Holds a processing for the route.
@@ -23,24 +22,41 @@ export interface Route {
 	readonly template:
 		| Template
 		| Iterable<Template>
-		| ((...parameters: ReadonlyArray<string>) => Template | Iterable<Template>);
+		| ((...parameters: readonly string[]) => Template | Iterable<Template>);
 }
+
+/**
+ * Signals whether navigation was triggered by the native
+ * History API or browser's buttons.
+ *
+ * By default, a first page render is the native navigation
+ * because a first History record is written by the browser.
+ */
+let nativeNavigationTrigger = true;
 
 /**
  * Navigates to the _path_ or returns
  * the current page path.
- *
- * If no route is defined for the _path_,
- * then the last route will be rendered.
  */
 export const location = data(globalThis.location?.pathname ?? '/');
 
+effect(() => {
+	const path = location();
+
+	globalThis.history?.[nativeNavigationTrigger ? 'replaceState' : 'pushState'](
+		{ path },
+		'',
+		path,
+	);
+});
+
 /**
- * Creates reactive router.
- * _pattern_ will be converted to `RegExp` and
- * matched against a whole URL.
+ * Renders a first matched `Route`.
+ *
+ * If no route is defined for the current URL,
+ * then the last route will be rendered.
  */
-export const router =
+export const outlet =
 	(...routes: ReadonlyArray<Route>): Computed<Template | Iterable<Template>> =>
 	() => {
 		const path = location();
@@ -50,12 +66,12 @@ export const router =
 				patternToRegExp(pattern, exact).test(path),
 			) ??
 			// Last route is intended for a default page.
-			// Possibly "Not found" page.
-			routes[routes.length - 1];
+			// Possibly the "Not found" page.
+			routes.at(-1);
 
-		globalThis.history?.pushState({ path }, '', path);
-
-		return typeof route.template === 'function'
+		return route === undefined
+			? html``
+			: isFunction(route.template)
 			? route.template(
 					...(
 						patternToRegExp(route.pattern, route.exact ?? false).exec(path) ??
@@ -71,7 +87,9 @@ export const router =
 //  - back
 globalThis.addEventListener?.('popstate', (event: PopStateEvent) => {
 	if (event.state) {
+		nativeNavigationTrigger = true;
 		location(event.state.path);
+		nativeNavigationTrigger = false;
 	}
 });
 

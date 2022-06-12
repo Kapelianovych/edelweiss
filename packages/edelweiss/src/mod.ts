@@ -4,7 +4,7 @@ export { untrack } from './reactive/untrack';
 export { cleanup } from './reactive/cleanup';
 export { renderToString } from './render.server';
 export { render, hydrate } from './render.browser';
-export { location, router } from './router';
+export { location, outlet } from './router';
 export { data, type Data } from './reactive/data';
 export { html, type Template } from './html';
 export { lazy, type Resource } from './lazy';
