@@ -12,25 +12,32 @@ export interface Data<T> {
 	(value: T): void;
 }
 
+/** Cleans up the current effect and all deep children. */
+const cleanupEffect = (effect: InnerEffect): void => {
+	// All child effects should be deleted on every iteration.
+	// The parent effect will register new ones after it.
+	effect.children.forEach((child) => {
+		cleanupEffect(child);
+		// It is needed to signal all dependent data's to remove
+		// the child effect.
+		child.disposed = true;
+	});
+	effect.children.length = 0;
+
+	// We should cleanup previous state of running effect.
+	// There is no need to dispose a top-level effect
+	// (from the data's perspective) because it will never
+	// be flushed out of memory.
+	effect.cleanups.forEach((fn) => fn());
+	effect.cleanups.length = 0;
+};
+
 const update = (listeners: Set<InnerEffect>): void =>
 	listeners.forEach((effect) => {
 		// Only active effects should be executed and already disposed
 		// effects will be removed on the next pull of the data's value.
 		if (!effect.disposed) {
-			// All child effects should be deleted on every iteration.
-			// The parent effect will register new ones after it.
-			effect.children.forEach((child) => {
-				child.cleanup?.();
-				// It is needed to signal all dependent data's to remove
-				// the child effect.
-				child.disposed = true;
-			});
-			effect.children.length = 0;
-			// We should cleanup previous state of running effect.
-			// There is no need to dispose a top-level effect
-			// (from the data's perspective) because it will never
-			// be flushed out of memory.
-			effect.cleanup?.();
+			cleanupEffect(effect);
 
 			registerEffectAsCurrent(effect);
 			effect();

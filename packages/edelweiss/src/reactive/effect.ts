@@ -15,8 +15,9 @@ export const effect = (fn: Effect): void => {
 	// to the effect and don't impact user-provided function.
 	const innerEffect = () => fn();
 
-	innerEffect.children = [] as InnerEffect[];
 	innerEffect.disposed = false;
+	innerEffect.children = [] as InnerEffect[];
+	innerEffect.cleanups = [] as VoidFunction[];
 
 	registerEffectAsCurrent(innerEffect);
 	innerEffect();

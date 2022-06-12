@@ -8,9 +8,9 @@ export interface Computed<T> {
 }
 
 export interface InnerEffect extends Effect {
-	readonly children: InnerEffect[];
-	cleanup?: VoidFunction;
 	disposed: boolean;
+	readonly children: InnerEffect[];
+	readonly cleanups: VoidFunction[];
 }
 
 /**
