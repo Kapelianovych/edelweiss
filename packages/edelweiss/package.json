@@ -28,9 +28,9 @@
 		"copy:license": "cpy ../../LICENSE build/",
 		"copy:settings": "cpy package.json build/",
 		"prerelease": "npm run build",
-		"release": "npm publish build/ --access public",
+		"release": "cd build && npm publish --access public",
 		"prerelease:next": "npm run build",
-		"release:next": "npm publish build/ --access public --tag next"
+		"release:next": "cd build && npm publish --access public --tag next"
 	},
 	"author": "Kapelianovych Yevhen",
 	"license": "MIT"
