@@ -55,14 +55,11 @@ export const data = <T>(initial: T): Data<T> => {
 	const triggerUpdateWith = (nextValue: T): void => {
 		currentValue = nextValue;
 		update(listeners);
+		listeners.forEach((effect) => effect.disposed && listeners.delete(effect));
 	};
 
 	return ((value) => {
 		if (value === undefined) {
-			listeners
-				// Effects are disposed right before new subscription.
-				.forEach((effect) => effect.disposed && listeners.delete(effect));
-
 			if (currentlyTracked) {
 				const effect = currentEffect();
 
