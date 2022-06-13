@@ -35,9 +35,10 @@ const cleanupEffect = (effect: InnerEffect): void => {
 
 const update = (listeners: Set<InnerEffect>): void =>
 	listeners.forEach((effect) => {
-		// Only active effects should be executed and already disposed
-		// effects will be removed on the next pull of the data's value.
-		if (!effect.disposed) {
+		// Only active effects should be executed.
+		if (effect.disposed) {
+			listeners.delete(effect);
+		} else {
 			cleanupEffect(effect);
 
 			registerEffectAsCurrent(effect);
@@ -55,7 +56,6 @@ export const data = <T>(initial: T): Data<T> => {
 	const triggerUpdateWith = (nextValue: T): void => {
 		currentValue = nextValue;
 		update(listeners);
-		listeners.forEach((effect) => effect.disposed && listeners.delete(effect));
 	};
 
 	return ((value) => {
