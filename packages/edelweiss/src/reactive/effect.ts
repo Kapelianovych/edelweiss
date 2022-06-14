@@ -19,7 +19,7 @@ export const effect = (fn: Effect): void => {
 	innerEffect.children = [] as InnerEffect[];
 	innerEffect.cleanups = [] as VoidFunction[];
 
-	registerEffectAsCurrent(innerEffect);
+	registerEffectAsCurrent(innerEffect, true);
 	innerEffect();
 	endCurrentEffect();
 };
