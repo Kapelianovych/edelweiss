@@ -1,0 +1,8 @@
+{
+	"name": "internal",
+	"private": true,
+	"description": "For internal use only.",
+	"exports": {
+		".": "./index.ts"
+	}
+}

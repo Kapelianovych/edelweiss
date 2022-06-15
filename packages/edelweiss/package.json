@@ -18,7 +18,6 @@
 		"url": "https://github.com/YevhenKap/edelweiss"
 	},
 	"scripts": {
-		"test": "uvu -r tsm tests",
 		"clean": "rimraf build/*",
 		"prebuild": "npm run clean",
 		"build": "node esbuild.config.js && tsc",

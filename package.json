@@ -2,10 +2,8 @@
 	"name": "edelweiss",
 	"type": "module",
 	"private": true,
-	"version": "0.0.1",
-	"description": "A couple of libraries for constructing web applications.",
+	"description": "A couple of libraries that help constructing web applications.",
 	"scripts": {
-		"test": "jest",
 		"clean": "npm run clean --workspaces",
 		"prebuild": "npm run test",
 		"build": "npm run build --workspaces",
@@ -20,6 +18,7 @@
 	],
 	"workspaces": [
 		"packages/docs",
+		"packages/internal",
 		"packages/edelweiss",
 		"packages/edelweiss-cli",
 		"packages/edelweiss-ssr"

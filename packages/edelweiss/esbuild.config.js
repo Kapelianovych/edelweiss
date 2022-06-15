@@ -9,4 +9,5 @@ build({
 	target: ['esnext'],
 	bundle: true,
 	platform: 'neutral',
+	sourcemap: true,
 });
