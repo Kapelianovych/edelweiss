@@ -25,7 +25,7 @@ const cleanupEffect = (effect: InnerEffect): void => {
 	});
 	effect.children.length = 0;
 
-	// We should cleanup previous state of running effect.
+	// We should clean up previous state of running effect.
 	// There is no need to dispose a top-level effect
 	// (from the data's perspective) because it will never
 	// be flushed out of memory.
