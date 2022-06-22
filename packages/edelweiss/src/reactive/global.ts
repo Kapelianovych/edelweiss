@@ -31,7 +31,7 @@ export const currentEffect = (): InnerEffect | null => effects.at(-1) ?? null;
  * Sets an _effect_ as the current (running) effect.
  *
  * @param maybeChild - signals if the _effect_ may be inside another
- * effect and therefore the it should be registered as a child.
+ * effect, and therefore it should be registered as a child.
  * By default, the function registers an independent effect.
  */
 export const registerEffectAsCurrent = (
