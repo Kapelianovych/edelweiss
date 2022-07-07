@@ -1,5 +1,6 @@
 import { data } from './reactive/data';
 import { effect } from './reactive/effect';
+import { untrack } from './reactive/untrack.js';
 import { Computed } from './reactive/global';
 import { isFunction } from './checks';
 import { html, Template } from './html';
@@ -71,15 +72,35 @@ effect(() => {
 export const outlet = (
 	...routes: readonly Route[]
 ): Computed<Template | Iterable<Template>> => {
+	let currentRoute: Route | null = null;
 	const fallbackRoute = routes.find(({ fallback = false }) => fallback);
 
+	const trigger = data(true);
+
+	effect(() => {
+		const currentURL = location();
+
+		if (
+			currentRoute &&
+			!patternToRegExp(currentRoute.pattern, currentRoute.exact ?? false).test(
+				currentURL,
+			)
+		) {
+			trigger(!untrack(trigger));
+		}
+	});
+
 	return () => {
-		const path = location();
+		trigger();
+
+		const path = untrack(location);
 
 		const route =
 			routes.find(({ pattern, exact = false }) =>
 				patternToRegExp(pattern, exact).test(path),
 			) ?? fallbackRoute;
+
+		currentRoute = route ?? null;
 
 		return route === undefined
 			? html``
