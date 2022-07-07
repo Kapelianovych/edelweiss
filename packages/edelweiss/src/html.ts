@@ -59,7 +59,7 @@ export interface Template {
 	readonly html: string;
 	readonly markers: Map<Marker, Container>;
 
-	readonly [key: symbol]: string;
+	readonly [templateId]: null;
 }
 
 export const isTemplate = (value: unknown): value is Template =>
@@ -117,7 +117,7 @@ export const html = (
 	const markers: Map<Marker, Container> = new Map();
 
 	return {
-		[templateId]: 'Template',
+		[templateId]: null,
 		html: statics
 			.reduce((accumulator, part, index) => {
 				const precedingTemplate = accumulator + part;
