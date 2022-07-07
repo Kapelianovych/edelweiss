@@ -1,39 +1,16 @@
+import { data } from './reactive/data';
 import { render } from './render.browser';
 import { Template } from './html';
-import { data, Data } from './reactive/data';
 
 /** Converts kebab-case to camelCase. */
 const toCamelCase = (name: string): string =>
 	name.replace(/-(\w)/g, (_, letter: string) => letter.toUpperCase());
 
-const attachAccessorsTo = (target: CustomHTMLElement): void => {
-	const constructor = target.constructor as typeof CustomHTMLElement;
-
-	const reactiveProperties = constructor.observedAttributes.reduce(
-		(obj, propertyName) => {
-			obj[toCamelCase(propertyName)] = data(target.getAttribute(propertyName));
-			return obj;
-		},
-		{} as Record<string, Data<Property>>,
-	);
-
-	Object.keys(reactiveProperties).forEach((key) =>
-		Reflect.defineProperty(target, key, {
-			set: (other: Property): void => {
-				other === null
-					? target.removeAttribute(key)
-					: target.setAttribute(key, other);
-				reactiveProperties[key](other);
-			},
-			get: () => reactiveProperties[key](),
-			enumerable: true,
-			configurable: false,
-		}),
-	);
-};
-
-/** Allowed type of value of property. */
-export type Property = null | string;
+export interface Observed<T> {
+	readonly attribute: string;
+	readonly mapToProperty: (value: string | null) => T;
+	readonly mapToAttribute: (value: T) => string | null;
+}
 
 const HTMLElementClass = globalThis.HTMLElement ?? class {};
 
@@ -48,22 +25,55 @@ export abstract class CustomHTMLElement extends HTMLElementClass {
 	 */
 	static readonly tagName: string;
 
+	private static readonly observed: Observed<any>[] = [];
+
+	private static get observedAttributes(): readonly string[] {
+		return this.observed.map(({ attribute }) => attribute);
+	}
+
 	/**
-	 * Returns an array of attribute names to monitor for changes.
-	 * For declared attributes same reactive properties will be created.
-	 * Default value of new properties is empty string.
-	 * Property is always reflect same attribute's value and
-	 * vise versa.
-	 * Name of properties will be in _camelCase_ notation.
+	 * Creates a two-way data binding between an *attribute* and
+	 * a camel cased reactive property.
 	 */
-	static get observedAttributes(): ReadonlyArray<string> {
-		return [];
+	protected static observe<T = string | null>(
+		attribute: string,
+		{
+			mapToProperty = (value) => value as unknown as T,
+			mapToAttribute = String,
+		}: Partial<Omit<Observed<T>, 'attribute'>> = {},
+	) {
+		this.observed.push({ attribute, mapToAttribute, mapToProperty });
+	}
+
+	constructor() {
+		super();
+
+		(this.constructor as typeof CustomHTMLElement).observed.forEach(
+			({ attribute, mapToProperty, mapToAttribute }) => {
+				const property = toCamelCase(attribute);
+
+				const value = data(mapToProperty(this.getAttribute(attribute)));
+
+				Reflect.defineProperty(this, property, {
+					set: (other): void => {
+						const attributeValue = mapToAttribute(other);
+
+						attributeValue === null
+							? this.removeAttribute(attribute)
+							: this.setAttribute(attribute, attributeValue);
+
+						value(other);
+					},
+					get: value,
+					enumerable: true,
+					configurable: false,
+				});
+			},
+		);
 	}
 
 	private connectedCallback() {
 		if (this.isConnected) {
-			attachAccessorsTo(this);
-
 			render(
 				this.render(),
 				this.attachShadow({
@@ -102,16 +112,23 @@ export abstract class CustomHTMLElement extends HTMLElementClass {
 	protected adopted?(): void;
 
 	private attributeChangedCallback(
-		this: CustomHTMLElement & { [key: string]: Property },
+		this: CustomHTMLElement & { [key: string]: unknown },
 		name: string,
-		oldValue: Property,
-		newValue: Property,
+		oldValue: string | null,
+		newValue: string | null,
 	): void {
 		if (!Object.is(oldValue, newValue)) {
-			this[toCamelCase(name)] = newValue;
-		}
+			const observedAttributeDescriptor = (
+				this.constructor as typeof CustomHTMLElement
+			).observed.find(({ attribute }) => attribute === name);
 
-		this.attributeChanged?.(name, oldValue, newValue);
+			if (observedAttributeDescriptor !== undefined) {
+				this[toCamelCase(name)] =
+					observedAttributeDescriptor.mapToProperty(newValue);
+			}
+
+			this.attributeChanged?.(name, oldValue, newValue);
+		}
 	}
 
 	/**
@@ -120,11 +137,11 @@ export abstract class CustomHTMLElement extends HTMLElementClass {
 	 */
 	protected attributeChanged?(
 		name: string,
-		oldValue: Property,
-		newValue: Property,
+		oldValue: string | null,
+		newValue: string | null,
 	): void;
 
-	/** Defines inner DOM of custom element as Shadow DOM. */
+	/** Defines the inner DOM of a custom element as Shadow DOM. */
 	protected abstract render(): Template | Iterable<Template>;
 }
 

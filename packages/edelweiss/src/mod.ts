@@ -12,7 +12,7 @@ export { meta, type MetaRecord } from './meta';
 export {
 	registerElement,
 	CustomHTMLElement,
-	type Property,
+	type Observed,
 } from './custom_html_element';
 export {
 	language,
